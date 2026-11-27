@@ -1,0 +1,1317 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>จำแนกสารโดยใช้เนื้อสารเป็นเกณฑ์ (ม.1) - ศูนย์รวมเกมวิทยาศาสตร์</title>
+    <!-- โหลด Tailwind CSS และ Google Fonts (Prompt / Sarabun) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700&family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Sarabun', sans-serif;
+            background-color: #f0f9ff;
+            color: #0f172a;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+            overscroll-behavior-y: contain;
+        }
+        h1, h2, h3, .font-prompt {
+            font-family: 'Prompt', sans-serif;
+        }
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        .btn-tactile {
+            transition: transform 0.1s ease, box-shadow 0.1s ease, background-color 0.15s ease;
+        }
+        .btn-tactile:active {
+            transform: translateY(2px) scale(0.98);
+        }
+        @keyframes popIn {
+            0% { transform: scale(0.85); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .modal-enter {
+            animation: popIn 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        @keyframes shakeBeaker {
+            0%, 100% { transform: rotate(0deg) translateX(0); }
+            20% { transform: rotate(-6deg) translateX(-6px); }
+            40% { transform: rotate(6deg) translateX(6px); }
+            60% { transform: rotate(-4deg) translateX(-4px); }
+            80% { transform: rotate(4deg) translateX(4px); }
+        }
+        .beaker-shaking {
+            animation: shakeBeaker 0.45s ease-in-out infinite;
+        }
+        @keyframes floatParticle {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-4px); }
+        }
+        .particle-float {
+            animation: floatParticle 2.4s ease-in-out infinite;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col pb-6">
+
+    <!-- ===================================================================== -->
+    <!-- ส่วนหัวแอป (Sticky Header)                                            -->
+    <!-- ===================================================================== -->
+    <header class="bg-gradient-to-r from-sky-600 to-blue-700 text-white shadow-md sticky top-0 z-30">
+        <div class="max-w-4xl mx-auto px-3 py-2.5 flex items-center justify-between gap-2">
+            <div class="flex items-center gap-2">
+                <!-- ปุ่มกลับหน้าศูนย์รวมเกมหลัก -->
+                <a href="../index.html" class="btn-tactile flex items-center gap-1 bg-white/20 hover:bg-white/30 text-white font-prompt font-semibold text-xs sm:text-sm px-2.5 py-1.5 rounded-xl border border-white/30">
+                    <span>←</span> <span>หน้าหลัก</span>
+                </a>
+                <div class="border-l border-sky-400/40 pl-2">
+                    <div class="flex items-center gap-1.5">
+                        <span class="bg-amber-300 text-sky-950 font-prompt font-bold text-[10px] px-1.5 py-0.2 rounded">ม.1</span>
+                        <h1 class="text-sm sm:text-base font-bold leading-tight">จำแนกสาร (เกณฑ์เนื้อสาร)</h1>
+                    </div>
+                    <p class="text-[11px] text-sky-100 hidden sm:block">สารเนื้อเดียว vs สารเนื้อผสม • ผสมสาร & ซูมเนื้อสาร</p>
+                </div>
+            </div>
+
+            <!-- ปุ่มเปิดสมุดบันทึกสาร + ตัวนับความสำเร็จ -->
+            <div class="flex items-center gap-2">
+                <button onclick="openNotebookModal()" class="btn-tactile flex items-center gap-1.5 bg-white/15 hover:bg-white/25 text-white font-prompt font-semibold text-xs sm:text-sm px-3 py-1.5 rounded-xl border border-white/30">
+                    <span>📒</span>
+                    <span class="hidden xs:inline">สมุดบันทึก</span>
+                    <span id="notebookBadge" class="bg-amber-300 text-sky-950 font-bold text-xs px-1.5 py-0.2 rounded-full">0/15</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- แถบเลือกระดับความยาก (ไต่ระดับ 3 ขั้น) -->
+        <div class="bg-sky-800/60 border-t border-sky-500/30">
+            <div class="max-w-4xl mx-auto px-3 py-1.5 flex items-center justify-between gap-2 overflow-x-auto no-scrollbar">
+                <div class="flex items-center gap-1.5 flex-shrink-0">
+                    <button onclick="setStageFilter('all')" data-stage="all" class="stage-tab-btn font-prompt text-xs font-bold px-2.5 py-1 rounded-lg bg-white text-sky-900 shadow-xs">
+                        ทุกขั้น (15)
+                    </button>
+                    <button onclick="setStageFilter('ขั้นที่ 1 : เริ่มต้น')" data-stage="ขั้นที่ 1 : เริ่มต้น" class="stage-tab-btn font-prompt text-xs font-semibold px-2.5 py-1 rounded-lg bg-sky-900/50 text-sky-100 hover:bg-sky-700">
+                        1. เริ่มต้น
+                    </button>
+                    <button onclick="setStageFilter('ขั้นที่ 2 : สังเกตละเอียด')" data-stage="ขั้นที่ 2 : สังเกตละเอียด" class="stage-tab-btn font-prompt text-xs font-semibold px-2.5 py-1 rounded-lg bg-sky-900/50 text-sky-100 hover:bg-sky-700">
+                        2. สังเกตละเอียด
+                    </button>
+                    <button onclick="setStageFilter('ขั้นที่ 3 : วิเคราะห์ตัวหลอก')" data-stage="ขั้นที่ 3 : วิเคราะห์ตัวหลอก" class="stage-tab-btn font-prompt text-xs font-semibold px-2.5 py-1 rounded-lg bg-sky-900/50 text-sky-100 hover:bg-sky-700">
+                        3. ตัวหลอกปราบเซียน
+                    </button>
+                </div>
+
+                <button onclick="openSummaryModal()" class="btn-tactile flex-shrink-0 flex items-center gap-1 bg-emerald-400 hover:bg-emerald-300 text-sky-950 font-prompt font-bold text-xs px-2.5 py-1 rounded-lg shadow-xs">
+                    <span>📊</span> สรุปผลรอบนี้
+                </button>
+            </div>
+        </div>
+
+        <!-- แถบเลือกด่าน 1 - 15 -->
+        <div class="bg-sky-700/60 border-t border-sky-500/30">
+            <div id="levelSelector" class="max-w-4xl mx-auto px-3 py-2 flex items-center gap-1.5 overflow-x-auto no-scrollbar">
+                <!-- ปุ่มด่านสร้างด้วย JavaScript -->
+            </div>
+        </div>
+    </header>
+
+    <!-- ===================================================================== -->
+    <!-- พื้นที่เล่นหลัก (Adaptive Portrait & Landscape Layout)                 -->
+    <!-- ===================================================================== -->
+    <main class="flex-1 max-w-4xl w-full mx-auto px-3 pt-3 space-y-3">
+
+        <!-- แถบหัวข้อด่านปัจจุบัน -->
+        <div class="bg-white rounded-2xl p-3 shadow-xs border border-slate-200 flex flex-wrap items-center justify-between gap-2">
+            <div>
+                <div class="flex items-center gap-2 flex-wrap">
+                    <span id="levelBadge" class="bg-sky-100 text-sky-800 font-prompt font-bold text-xs px-2.5 py-0.5 rounded-full">ด่านที่ 1/15</span>
+                    <span id="stageBadge" class="bg-emerald-100 text-emerald-800 font-semibold text-xs px-2.5 py-0.5 rounded-full">ขั้นที่ 1 : เริ่มต้น</span>
+                    <span id="modeBadge" class="bg-indigo-100 text-indigo-800 font-semibold text-xs px-2.5 py-0.5 rounded-full">โหมดผสมสารทดลอง</span>
+                </div>
+                <h2 id="substanceTitle" class="text-base sm:text-xl font-bold text-slate-800 mt-1">น้ำเกลือ (เกลือแกง + น้ำ)</h2>
+            </div>
+
+            <button onclick="resetCurrentLevel()" class="btn-tactile flex items-center gap-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-prompt font-semibold text-xs sm:text-sm px-3 py-2 rounded-xl border border-slate-300">
+                <span>↺</span> ทดลองใหม่
+            </button>
+        </div>
+
+        <!-- กล่อง Feedback ทันทีเมื่อตอบผิด (ซ่อนเป็นค่าเริ่มต้น) -->
+        <div id="feedbackCard" class="hidden rounded-2xl p-3.5 bg-rose-50 border-2 border-rose-300 text-rose-950 shadow-sm">
+            <div class="flex items-start gap-2.5">
+                <span class="text-2xl flex-shrink-0">🔍</span>
+                <div class="flex-1">
+                    <div class="font-prompt font-bold text-sm sm:text-base text-rose-800" id="feedbackTitle">ลองสังเกตเนื้อสารอีกครั้งนะ!</div>
+                    <p class="text-xs sm:text-sm text-rose-900 mt-0.5 leading-relaxed" id="feedbackBody"></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- โครงสร้างหลัก 2 คอลัมน์บนแท็บเล็ต/แนวนอน และเรียงแนวตั้งบนมือถือ -->
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-3 items-stretch">
+
+            <!-- คอลัมน์ซ้าย (7 ส่วน) : ภาชนะทดลอง / ภาพตัวอย่างสาร + เครื่องมือซูมดูเนื้อสาร -->
+            <section class="md:col-span-7 bg-white rounded-3xl p-3.5 sm:p-4 shadow-xs border border-slate-200 flex flex-col justify-between">
+                <!-- แถบควบคุมเครื่องมือ "ซูมดูเนื้อสาร" -->
+                <div class="flex items-center justify-between gap-2 pb-2.5 mb-2 border-b border-slate-100">
+                    <span class="text-xs font-semibold text-slate-500" id="instructionPrompt">
+                        ขั้นที่ 1: แตะหรือลากสารตั้งต้นลงในบีกเกอร์
+                    </span>
+
+                    <!-- ปุ่มสลับมุมมองปกติ <-> ซูมขยายดูเนื้อสาร -->
+                    <button id="zoomToggleBtn" onclick="toggleMicroZoom()" class="btn-tactile flex items-center gap-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-800 font-prompt font-bold text-xs sm:text-sm px-3 py-1.5 rounded-xl border-2 border-indigo-300 shadow-2xs">
+                        <span id="zoomIcon">🔬</span>
+                        <span id="zoomLabel">ซูมดูเนื้อสาร</span>
+                    </button>
+                </div>
+
+                <!-- พื้นที่ภาชนะทดลอง / กล้องขยายเนื้อสาร (รองรับการลากวาง Drop Zone และการเขย่า) -->
+                <div id="beakerDropZone"
+                     ondragover="handleDragOver(event)"
+                     ondragleave="handleDragLeave(event)"
+                     ondrop="handleDrop(event)"
+                     class="relative flex-1 min-h-[250px] sm:min-h-[280px] rounded-2xl bg-gradient-to-b from-slate-50 to-sky-50/60 border-2 border-dashed border-slate-300 flex flex-col items-center justify-center p-3 transition-all overflow-hidden">
+
+                    <!-- แถบสถานะมุมซ้ายบนของภาพ -->
+                    <div id="viewModeIndicator" class="absolute top-2.5 left-2.5 z-10 bg-white/90 backdrop-blur-xs border border-slate-200 px-2.5 py-1 rounded-full text-[11px] font-prompt font-semibold text-slate-700 shadow-2xs">
+                        👁️ มุมมองตาเปล่า (1x)
+                    </div>
+
+                    <!-- ภาพ SVG จำลองภาชนะและเนื้อสาร -->
+                    <div id="beakerVisualWrapper" class="w-full max-w-[260px] aspect-square flex items-center justify-center transition-transform">
+                        <svg id="substanceSvg" viewBox="0 0 260 260" class="w-full h-full overflow-visible">
+                            <!-- วาดด้วย JavaScript ตามสถานะการทดลองและโหมดซูม -->
+                        </svg>
+                    </div>
+
+                    <!-- ปุ่มกดคน/เขย่าสาร (ปรากฏเมื่อใส่สารตั้งต้นลงภาชนะครบแล้วในโหมดผสมสาร) -->
+                    <div id="stirActionArea" class="hidden mt-1 z-10 flex flex-col items-center">
+                        <button id="stirBtn"
+                                onpointerdown="startStirring()"
+                                onpointerup="stopStirring()"
+                                onpointerleave="stopStirring()"
+                                onclick="pulseStir()"
+                                class="btn-tactile bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-prompt font-bold text-sm sm:text-base px-5 py-2.5 rounded-2xl shadow-md flex items-center gap-2 border-2 border-amber-300">
+                            <span>🥄</span>
+                            <span id="stirBtnText">แตะรัวๆ หรือกดค้างเพื่อคน/เขย่า!</span>
+                        </button>
+                        <div class="w-44 h-2 bg-slate-200 rounded-full overflow-hidden mt-1.5">
+                            <div id="stirProgressBar" class="h-full bg-amber-500 transition-all duration-150" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ถาดสารตั้งต้นสำหรับลากหรือแตะใส่ภาชนะ (แสดงเฉพาะในโหมดผสมสาร) -->
+                <div id="ingredientsTray" class="mt-3 pt-2.5 border-t border-slate-100">
+                    <div class="text-xs font-prompt font-semibold text-slate-600 mb-2 flex items-center justify-between">
+                        <span>🧪 สารตั้งต้น (ลากลงบีกเกอร์ หรือแตะเพื่อใส่):</span>
+                        <span id="ingCountText" class="text-sky-700 font-bold">ใส่แล้ว 0/2</span>
+                    </div>
+                    <div id="ingredientButtons" class="grid grid-cols-2 gap-2">
+                        <!-- ปุ่ม/การ์ดสารตั้งต้น -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- คอลัมน์ขวา (5 ส่วน) : แผงวิเคราะห์เกณฑ์เนื้อสาร & ปุ่มเลือกคำตอบขนาดใหญ่ -->
+            <section class="md:col-span-5 bg-white rounded-3xl p-3.5 sm:p-4 shadow-xs border border-slate-200 flex flex-col justify-between space-y-3">
+                <div>
+                    <h3 class="font-prompt font-bold text-slate-800 text-sm sm:text-base flex items-center gap-1.5 mb-2">
+                        <span>🧠</span> วิเคราะห์ตามเกณฑ์ "เนื้อสาร"
+                    </h3>
+
+                    <!-- กล่องสรุปจุดสังเกตสั้นๆ -->
+                    <div class="bg-sky-50/80 border border-sky-200 rounded-2xl p-3 text-xs sm:text-sm text-slate-700 space-y-1.5">
+                        <div class="font-prompt font-bold text-sky-900">💡 หลักสังเกตง่ายๆ:</div>
+                        <p>• <strong>สารเนื้อเดียว :</strong> มองเห็นกลมกลืนเป็นเนื้อเดียวกันตลอดทั้งส่วน <em>(อาจมีหลายองค์ประกอบรวมกันก็ได้ แต่ไม่แยกชั้น/ไม่เห็นตะกอน)</em></p>
+                        <p>• <strong>สารเนื้อผสม :</strong> มองเห็นเนื้อสารไม่กลมกลืนกัน มีตะกอน แยกชั้น หรือซูมดูแล้วพบอนุภาค/หยดสารลอยกระจายตัวไม่สม่ำเสมอ</p>
+                    </div>
+
+                    <!-- คำอธิบายบริบทของสารในด่านนี้ -->
+                    <div class="mt-3 bg-slate-50 rounded-2xl p-3 border border-slate-200">
+                        <div class="text-[11px] font-prompt font-semibold text-slate-500">ข้อมูลตัวอย่างสาร:</div>
+                        <p id="substanceContext" class="text-xs sm:text-sm text-slate-800 font-medium mt-0.5 leading-relaxed">
+                            นำเกลือแกงใส่ลงในน้ำสะอาด แล้วคนให้เข้ากัน
+                        </p>
+                    </div>
+                </div>
+
+                <!-- ปุ่มตัดสินใจเลือกคำตอบขนาดใหญ่ (เหมาะกับนิ้วสัมผัส) -->
+                <div class="pt-2">
+                    <div id="lockNotice" class="hidden text-center text-xs font-prompt font-semibold text-amber-700 bg-amber-50 border border-amber-200 rounded-xl py-2 px-3 mb-2">
+                        ⏳ ผสมและคนสารในภาชนะให้เรียบร้อยก่อนตอบนะ
+                    </div>
+
+                    <div class="text-xs font-prompt font-bold text-slate-600 text-center mb-2">
+                        สารนี้จัดเป็นสารประเภทใด?
+                    </div>
+
+                    <div class="grid grid-cols-1 gap-2.5">
+                        <!-- ปุ่มที่ 1 : สารเนื้อเดียว -->
+                        <button id="btnHomogeneous" onclick="submitClassification('homogeneous')"
+                                class="btn-tactile w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-teal-600 to-emerald-600 hover:opacity-95 disabled:opacity-40 text-white shadow-md border-2 border-teal-400 flex items-center justify-between">
+                            <div class="flex items-center gap-3 text-left">
+                                <span class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-xl font-bold">💧</span>
+                                <div>
+                                    <div class="font-prompt font-bold text-base sm:text-lg leading-tight">สารเนื้อเดียว</div>
+                                    <div class="text-[11px] text-teal-100">กลมกลืนสม่ำเสมอตลอดทั้งส่วน</div>
+                                </div>
+                            </div>
+                            <span class="text-lg font-bold">→</span>
+                        </button>
+
+                        <!-- ปุ่มที่ 2 : สารเนื้อผสม -->
+                        <button id="btnHeterogeneous" onclick="submitClassification('heterogeneous')"
+                                class="btn-tactile w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-orange-600 to-amber-600 hover:opacity-95 disabled:opacity-40 text-white shadow-md border-2 border-orange-400 flex items-center justify-between">
+                            <div class="flex items-center gap-3 text-left">
+                                <span class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-xl font-bold">🫧</span>
+                                <div>
+                                    <div class="font-prompt font-bold text-base sm:text-lg leading-tight">สารเนื้อผสม</div>
+                                    <div class="text-[11px] text-orange-100">ไม่สม่ำเสมอ แยกส่วน/มีอนุภาคแขวนลอย</div>
+                                </div>
+                            </div>
+                            <span class="text-lg font-bold">→</span>
+                        </button>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- ===================================================================== -->
+    <!-- หน้าต่างแสดงความยินดีเมื่อจำแนกถูกต้อง + บันทึกลงสมุดบันทึก (MODAL)    -->
+    <!-- ===================================================================== -->
+    <div id="successModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+        <div class="modal-enter bg-white rounded-3xl max-w-sm w-full p-5 text-center shadow-2xl border-2 border-emerald-400">
+            <div class="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-2 text-3xl">
+                ✅
+            </div>
+            <span id="modalCategoryBadge" class="inline-block bg-teal-100 text-teal-800 font-prompt font-bold text-xs px-3 py-0.5 rounded-full mb-1">
+                สารเนื้อเดียว
+            </span>
+            <h3 id="modalSubstanceName" class="font-prompt font-bold text-xl text-slate-800">น้ำเกลือ</h3>
+            <p class="text-xs text-emerald-700 font-semibold mt-0.5">📒 บันทึกลงใน "สมุดบันทึกสาร" เรียบร้อยแล้ว!</p>
+
+            <div class="my-3 bg-slate-50 border border-slate-200 rounded-2xl p-3 text-left text-xs sm:text-sm text-slate-700 leading-relaxed">
+                <strong class="font-prompt text-slate-900 block mb-1">🔬 เหตุผลทางวิทยาศาสตร์:</strong>
+                <span id="modalExplanation"></span>
+            </div>
+
+            <div class="flex flex-col gap-2 mt-4">
+                <button id="modalNextBtn" onclick="goNextLevel()" class="btn-tactile w-full bg-sky-600 hover:bg-sky-700 text-white font-prompt font-bold py-3 px-4 rounded-xl text-base shadow-md">
+                    ไปด่านถัดไป →
+                </button>
+                <button onclick="closeSuccessModal()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-prompt font-semibold py-2 px-4 rounded-xl text-xs sm:text-sm">
+                    ดูภาพการซูมต่อ
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- หน้าต่างสมุดบันทึกสาร (SUBSTANCE NOTEBOOK MODAL)                       -->
+    <!-- ===================================================================== -->
+    <div id="notebookModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-3 sm:p-4">
+        <div class="modal-enter bg-white rounded-3xl max-w-lg w-full max-h-[85vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden">
+            <div class="bg-gradient-to-r from-sky-600 to-blue-700 text-white px-5 py-3.5 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <span class="text-2xl">📒</span>
+                    <div>
+                        <h3 class="font-prompt font-bold text-base sm:text-lg leading-tight">สมุดบันทึกสาร (ม.1)</h3>
+                        <p class="text-xs text-sky-100" id="notebookSubtitle">สะสมครบแล้ว 0 จาก 15 ชนิด</p>
+                    </div>
+                </div>
+                <button onclick="closeNotebookModal()" class="w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center font-bold">✕</button>
+            </div>
+
+            <div id="notebookList" class="p-4 overflow-y-auto space-y-2.5 flex-1">
+                <!-- รายการสารที่บันทึกไว้ -->
+            </div>
+
+            <div class="p-3 bg-slate-50 border-t border-slate-200">
+                <button onclick="closeNotebookModal()" class="btn-tactile w-full bg-slate-800 text-white font-prompt font-semibold py-2.5 rounded-xl text-sm">
+                    ปิดสมุดบันทึก
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- หน้าต่างสรุปผลท้ายรอบสำหรับอภิปรายในชั้นเรียน (CLASSROOM SUMMARY)     -->
+    <!-- ===================================================================== -->
+    <div id="summaryModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-3 sm:p-4">
+        <div class="modal-enter bg-white rounded-3xl max-w-lg w-full max-h-[88vh] flex flex-col shadow-2xl border-2 border-indigo-300 overflow-hidden">
+            <div class="bg-gradient-to-r from-indigo-700 to-sky-700 text-white px-5 py-4 flex items-center justify-between">
+                <div>
+                    <span class="bg-amber-300 text-indigo-950 font-prompt font-bold text-[10px] px-2 py-0.5 rounded-full">สรุปผลการเรียนรู้ท้ายรอบ</span>
+                    <h3 class="font-prompt font-bold text-lg sm:text-xl mt-1">ตารางทบทวน & จุดที่มักเข้าใจผิด</h3>
+                </div>
+                <button onclick="closeSummaryModal()" class="w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center font-bold">✕</button>
+            </div>
+
+            <div class="p-4 overflow-y-auto space-y-4 flex-1">
+                <!-- การ์ดคะแนนรวม -->
+                <div class="grid grid-cols-3 gap-2 text-center">
+                    <div class="bg-emerald-50 border border-emerald-200 rounded-2xl p-2.5">
+                        <div class="text-[11px] font-semibold text-emerald-700">จำแนกผ่านแล้ว</div>
+                        <div id="sumPassedCount" class="font-prompt font-bold text-xl text-emerald-900">0/15</div>
+                    </div>
+                    <div class="bg-teal-50 border border-teal-200 rounded-2xl p-2.5">
+                        <div class="text-[11px] font-semibold text-teal-700">สารเนื้อเดียว</div>
+                        <div id="sumHomoCount" class="font-prompt font-bold text-xl text-teal-900">0/7</div>
+                    </div>
+                    <div class="bg-orange-50 border border-orange-200 rounded-2xl p-2.5">
+                        <div class="text-[11px] font-semibold text-orange-700">สารเนื้อผสม</div>
+                        <div id="sumHeteroCount" class="font-prompt font-bold text-xl text-orange-900">0/8</div>
+                    </div>
+                </div>
+
+                <!-- ส่วนแสดงจุดที่ตอบผิดบ่อย (Misconception Review) -->
+                <div>
+                    <h4 class="font-prompt font-bold text-sm text-rose-800 flex items-center gap-1.5 mb-2">
+                        <span>⚠️</span> จุดที่ตอบผิดในรอบนี้ (ชวนคุยอภิปรายในชั้นเรียน)
+                    </h4>
+                    <div id="mistakeReviewList" class="space-y-2">
+                        <!-- รายการข้อที่ตอบผิด -->
+                    </div>
+                </div>
+
+                <!-- ตารางสรุปเปรียบเทียบสารทั้งหมด -->
+                <div>
+                    <h4 class="font-prompt font-bold text-sm text-slate-800 mb-2">📋 สรุปการจัดกลุ่มสารทั้ง 15 ชนิด</h4>
+                    <div class="grid grid-cols-2 gap-2 text-xs">
+                        <div class="bg-teal-50/70 border border-teal-200 rounded-xl p-2.5">
+                            <div class="font-prompt font-bold text-teal-900 mb-1">💧 สารเนื้อเดียว (7)</div>
+                            <ul id="summaryHomoList" class="space-y-1 text-slate-700"></ul>
+                        </div>
+                        <div class="bg-orange-50/70 border border-orange-200 rounded-xl p-2.5">
+                            <div class="font-prompt font-bold text-orange-900 mb-1">🫧 สารเนื้อผสม (8)</div>
+                            <ul id="summaryHeteroList" class="space-y-1 text-slate-700"></ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-3 bg-slate-50 border-t border-slate-200 flex gap-2">
+                <button onclick="resetAllProgress()" class="btn-tactile bg-rose-100 hover:bg-rose-200 text-rose-800 font-prompt font-semibold py-2.5 px-3 rounded-xl text-xs border border-rose-300">
+                    ล้างสถิติเริ่มรอบใหม่
+                </button>
+                <button onclick="closeSummaryModal()" class="btn-tactile flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-prompt font-bold py-2.5 px-4 rounded-xl text-sm">
+                    กลับไปฝึกต่อ
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // =====================================================================
+        // 1. คลังข้อมูลสารทั้ง 15 ด่าน (ไต่ระดับ 3 ขั้น + ตัวหลอก ม.1)
+        // =====================================================================
+        const SUBSTANCES = [
+            // --- ขั้นที่ 1 : ระดับเริ่มต้น (เห็นชัดด้วยตาเปล่า 5 ข้อ) ---
+            {
+                id: 1,
+                stage: 'ขั้นที่ 1 : เริ่มต้น',
+                mode: 'mix', // ต้องลากสารตั้งต้นลงภาชนะแล้วคน
+                name: 'น้ำเกลือ (เกลือแกง + น้ำ)',
+                category: 'homogeneous',
+                context: 'นำผลึกเกลือแกงใส่ลงในน้ำสะอาด แล้วคนให้ละลายเข้ากัน',
+                ingredients: [
+                    { id: 'water', label: '💧 น้ำสะอาด', color: '#bae6fd' },
+                    { id: 'salt', label: '🧂 เกลือแกง', color: '#f8fafc' }
+                ],
+                visualType: 'salt_water',
+                wrongFeedback: 'แม้จะมีทั้งน้ำและเกลือรวมกัน แต่เมื่อคนจนละลายหมดแล้วจะมองเห็นใสเป็นเนื้อเดียวกันตลอดทั้งแก้ว ไม่เห็นเม็ดเกลือแยกออกมา จึงเป็น "สารเนื้อเดียว"',
+                explanation: 'เกลือแกงละลายแทรกตัวเข้ากับน้ำอย่างสม่ำเสมอทุกส่วน มองเห็นใสกลมกลืนเป็นเนื้อเดียวกันตลอดทั้งภาชนะ จัดเป็นสารเนื้อเดียว (สารละลาย)'
+            },
+            {
+                id: 2,
+                stage: 'ขั้นที่ 1 : เริ่มต้น',
+                mode: 'mix',
+                name: 'น้ำโคลน (ดินโคลน + น้ำ)',
+                category: 'heterogeneous',
+                context: 'ตักดินโคลนใส่ลงในแก้วน้ำ แล้วลองคนให้เข้ากันจากนั้นสังเกตผล',
+                ingredients: [
+                    { id: 'water', label: '💧 น้ำสะอาด', color: '#bae6fd' },
+                    { id: 'mud', label: '🟤 ดินโคลน', color: '#78350f' }
+                ],
+                visualType: 'mud_water',
+                wrongFeedback: 'สังเกตในบีกเกอร์สิ! แม้จะคนแล้วก็ยังเห็นความขุ่นข้น มีเม็ดดินและตะกอนแยกชั้นตกอยู่ที่ก้นแก้ว ไม่กลมกลืนเป็นเนื้อเดียวกัน',
+                explanation: 'อนุภาคดินมีขนาดใหญ่ ไม่ละลายน้ำ เมื่อตั้งทิ้งไว้จะเห็นตะกอนดินตกอยู่ที่ก้นภาชนะและน้ำขุ่นไม่สม่ำเสมอ จึงเป็นสารเนื้อผสม'
+            },
+            {
+                id: 3,
+                stage: 'ขั้นที่ 1 : เริ่มต้น',
+                mode: 'mix',
+                name: 'น้ำเชื่อม (น้ำตาลทราย + น้ำ)',
+                category: 'homogeneous',
+                context: 'ใส่น้ำตาลทรายลงในน้ำ แล้วคนจนผลึกน้ำตาลละลายหายไปหมด',
+                ingredients: [
+                    { id: 'water', label: '💧 น้ำสะอาด', color: '#bae6fd' },
+                    { id: 'sugar', label: '🍬 น้ำตาลทราย', color: '#fef3c7' }
+                ],
+                visualType: 'syrup',
+                wrongFeedback: 'อย่าสับสนระหว่าง "สารบริสุทธิ์" กับ "สารเนื้อเดียว" นะ! น้ำเชื่อมมี 2 อย่างผสมกันก็จริง แต่เมื่อละลายหมดแล้วเห็นเป็นเนื้อเดียวกันทุกหยด จึงเป็นสารเนื้อเดียว',
+                explanation: 'น้ำตาลละลายกระจายตัวในน้ำอย่างสม่ำเสมอ มองไม่เห็นความแตกต่างของเนื้อสารระหว่างส่วนบนกับส่วนล่าง จัดเป็นสารเนื้อเดียว'
+            },
+            {
+                id: 4,
+                stage: 'ขั้นที่ 1 : เริ่มต้น',
+                mode: 'mix',
+                name: 'น้ำจิ้มกะปิ / น้ำพริกกะปิ',
+                category: 'heterogeneous',
+                context: 'ผสมกะปิ น้ำปลา น้ำตาล และพริกซอยเข้าด้วยกันในถ้วย',
+                ingredients: [
+                    { id: 'shrimp_paste', label: '🟫 น้ำกะปิปรุงรส', color: '#7c2d12' },
+                    { id: 'chili', label: '🌶️ พริกซอยและกระเทียม', color: '#dc2626' }
+                ],
+                visualType: 'chili_sauce',
+                wrongFeedback: 'ลองมองในถ้วยน้ำจิ้มกะปิ! จะเห็นชิ้นพริก กระเทียม และเนื้อกะปิลอยกระจายตัวไม่สม่ำเสมอ ตักแต่ละคำได้ส่วนประกอบไม่เท่ากัน',
+                explanation: 'มองเห็นส่วนประกอบของพริก กระเทียม และเนื้อกะปิแยกจากกันชัดเจน เนื้อสารไม่กลมกลืนเป็นเนื้อเดียว จัดเป็นสารเนื้อผสม'
+            },
+            {
+                id: 5,
+                stage: 'ขั้นที่ 1 : เริ่มต้น',
+                mode: 'inspect',
+                name: 'น้ำส้มสายชูหมักมีตะกอน',
+                category: 'heterogeneous',
+                context: 'ขวดน้ำส้มสายชูหมักจากผลไม้ที่ตั้งทิ้งไว้จนมีตะกอนขุ่นนอนก้นขวด',
+                visualType: 'vinegar_sediment',
+                wrongFeedback: 'ระวัง! ถ้าน้ำส้มสายชูกลั่นใสๆ จะเป็นสารเนื้อเดียว แต่โจทย์ระบุว่า "น้ำส้มสายชูหมักมีตะกอน" ซึ่งเห็นตะกอนแยกส่วนชัดเจน จึงเป็นสารเนื้อผสม',
+                explanation: 'มีตะกอนจากการหมักแยกตัวอยู่ด้านล่างของของเหลว ทำให้มองเห็นเนื้อสารไม่เหมือนกันตลอดทั้งส่วน จัดเป็นสารเนื้อผสม'
+            },
+
+            // --- ขั้นที่ 2 : ระดับสังเกตละเอียด (ต้องใช้แว่นขยาย/ซูมดูอนุภาค 5 ข้อ) ---
+            {
+                id: 6,
+                stage: 'ขั้นที่ 2 : สังเกตละเอียด',
+                mode: 'inspect',
+                name: 'น้ำนมสด',
+                category: 'heterogeneous',
+                context: 'ดูด้วยตาเปล่าคล้ายสีขาวเนียนเสมอกัน ลองกดปุ่ม "ซูมดูเนื้อสาร" เพื่อขยายดูโครงสร้างภายใน!',
+                visualType: 'milk',
+                wrongFeedback: 'ตัวหลอกยอดฮิต! ตาเปล่าดูขาวเนียนเหมือนเนื้อเดียว แต่เมื่อ "ซูมดูเนื้อสาร" จะพบหยดไขมันและโปรตีนขนาดเล็กลอยกระจายตัวอยู่ (คอลลอยด์) จึงเป็นสารเนื้อผสม!',
+                explanation: 'น้ำนมเป็นคอลลอยด์ เมื่อส่องขยายจะพบอนุภาคไขมันและโปรตีนกระจายตัวอยู่ในน้ำ ไม่รวมเป็นเนื้อเดียวกันแท้จริง จัดเป็นสารเนื้อผสม'
+            },
+            {
+                id: 7,
+                stage: 'ขั้นที่ 2 : สังเกตละเอียด',
+                mode: 'inspect',
+                name: 'น้ำอัดลม (ขณะเปิดขวดมีฟองแก๊ส)',
+                category: 'heterogeneous',
+                context: 'สังเกตน้ำอัดลมในแก้วที่มีฟองแก๊สคาร์บอนไดออกไซด์ผุดลอยขึ้นมา',
+                visualType: 'soda',
+                wrongFeedback: 'สังเกตฟองแก๊สในแก้วน้ำอัดลม! มีทั้งสถานะ "ของเหลว" และ "ฟองแก๊ส" แยกส่วนกันชัดเจน จึงไม่เป็นเนื้อเดียวกันตลอดทั้งแก้ว',
+                explanation: 'มองเห็นฟองแก๊สคาร์บอนไดออกไซด์แยกตัวออกจากของเหลวอย่างชัดเจน มีเนื้อสาร 2 สถานะปนกัน จัดเป็นสารเนื้อผสม'
+            },
+            {
+                id: 8,
+                stage: 'ขั้นที่ 2 : สังเกตละเอียด',
+                mode: 'inspect',
+                name: 'ควันไฟ / ควันธูป',
+                category: 'heterogeneous',
+                context: 'กลุ่มควันที่ลอยออกจากกองไฟ ลองกด "ซูมดูเนื้อสาร" เพื่อดูอนุภาคในควัน',
+                visualType: 'smoke',
+                wrongFeedback: 'ควันไฟไม่ใช่แก๊สล้วนๆ นะ! เมื่อซูมดูจะพบเขม่าควันและฝุ่นละอองของแข็งขนาดเล็กลอยปะปนอยู่ในอากาศ จึงเป็นสารเนื้อผสม',
+                explanation: 'ควันไฟประกอบด้วยอนุภาคเขม่าของแข็งขนาดเล็กลอยกระจายอยู่ในแก๊ส (จัดเป็นคอลลอยด์/สารเนื้อผสม) ไม่กลมกลืนเป็นเนื้อเดียว'
+            },
+            {
+                id: 9,
+                stage: 'ขั้นที่ 2 : สังเกตละเอียด',
+                mode: 'inspect',
+                name: 'อากาศที่กรองฝุ่นละอองแล้ว (อากาศสะอาด)',
+                category: 'homogeneous',
+                context: 'อากาศบริสุทธิ์ที่ผ่านการกรองฝุ่นออกหมดแล้ว ประกอบด้วยแก๊ส N₂, O₂ และแก๊สอื่นๆ',
+                visualType: 'clean_air',
+                wrongFeedback: 'แม้จะมีแก๊สหลายชนิดรวมกัน แต่แก๊สทุกชนิดผสมกลมกลืนกันอย่างสมบูรณ์จนมองเห็นโปร่งใสเหมือนกันทุกจุด (ไม่มีฝุ่นควัน) จึงเป็นสารเนื้อเดียว',
+                explanation: 'แก๊สไนโตรเจน ออกซิเจน และแก๊สอื่นๆ ผสมกลมกลืนกันอย่างสม่ำเสมอทุกบริเวณ ไม่มีอนุภาคฝุ่นปะปน จัดเป็นสารเนื้อเดียวในสถานะแก๊ส'
+            },
+            {
+                id: 10,
+                stage: 'ขั้นที่ 2 : สังเกตละเอียด',
+                mode: 'mix',
+                name: 'น้ำกะทิคั้นสด',
+                category: 'heterogeneous',
+                context: 'ผสมเนื้อมะพร้าวขูดกับน้ำ แล้วคั้นเอาแต่น้ำกะทิสีขาวขุ่น ลองซูมดูเนื้อสาร!',
+                ingredients: [
+                    { id: 'water', label: '💧 น้ำอุ่น', color: '#bae6fd' },
+                    { id: 'coconut', label: '🥥 หัวกะทิเข้มข้น', color: '#fefce8' }
+                ],
+                visualType: 'coconut_milk',
+                wrongFeedback: 'น้ำกะทิเหมือนน้ำนมเลย! เมื่อซูมดูเนื้อสารหรือตั้งทิ้งไว้จะพบหยดไขมันมะพร้าวกระจายตัวไม่รวมเป็นเนื้อเดียวกับน้ำ (และอาจลอยแยกชั้นเป็นหัวกะทิ)',
+                explanation: 'น้ำกะทิมีหยดไขมันมะพร้าวกระจายตัวอยู่ในน้ำ เมื่อตั้งทิ้งไว้จะแยกชั้นเป็นหัวกะทิและหางกะทิ จัดเป็นสารเนื้อผสม'
+            },
+
+            // --- ขั้นที่ 3 : ระดับวิเคราะห์ตัวหลอกปราบเซียน (ของแข็ง & โลหะผสม 5 ข้อ) ---
+            {
+                id: 11,
+                stage: 'ขั้นที่ 3 : วิเคราะห์ตัวหลอก',
+                mode: 'inspect',
+                name: 'ทองเหลือง (โลหะผสมทองแดง + สังกะสี)',
+                category: 'homogeneous',
+                context: 'ขันทองเหลืองหรือลูกบิดประตูทองเหลือง ที่หลอมรวมทองแดงกับสังกะสีเข้าด้วยกัน',
+                visualType: 'brass',
+                wrongFeedback: 'ตัวหลอกคลาสสิก! นักเรียนมักคิดว่าโลหะ 2 ชนิดผสมกันต้องเป็นสารเนื้อผสม แต่ทองเหลืองหลอมรวมเป็นเนื้อโลหะสีเหลืองทองสม่ำเสมอทุกจุด จึงเป็น "สารเนื้อเดียว"',
+                explanation: 'ทองเหลืองเกิดจากการหลอมรวมทองแดงและสังกะสีจนกลมกลืนเป็นเนื้อโลหะเดียวกันตลอดทั้งชิ้น มองไม่เห็นรอยแยกของโลหะแต่ละชนิด จัดเป็นสารเนื้อเดียว'
+            },
+            {
+                id: 12,
+                stage: 'ขั้นที่ 3 : วิเคราะห์ตัวหลอก',
+                mode: 'inspect',
+                name: 'เหรียญบาท (โลหะผสมนิกเกิล + เหล็ก)',
+                category: 'homogeneous',
+                context: 'เหรียญกษาปณ์ 1 บาท ลองกด "ซูมดูเนื้อสาร" เพื่อตรวจความสม่ำเสมอของเนื้อโลหะ',
+                visualType: 'coin',
+                wrongFeedback: 'อย่าเพิ่งเดาว่าเป็นสารเนื้อผสมเพราะมีโลหะหลายชนิด! เนื้อโลหะของเหรียญบาทหลอมรวมเป็นเนื้อสีเงินสม่ำเสมอตลอดทั้งเหรียญ จึงเป็นสารเนื้อเดียว',
+                explanation: 'เหรียญบาทเป็นโลหะผสมที่หลอมรวมองค์ประกอบเข้าด้วยกันอย่างสม่ำเสมอ มองเห็นเป็นเนื้อโลหะเดียวกันตลอดทั้งชิ้น จัดเป็นสารเนื้อเดียว'
+            },
+            {
+                id: 13,
+                stage: 'ขั้นที่ 3 : วิเคราะห์ตัวหลอก',
+                mode: 'inspect',
+                name: 'หินแกรนิต',
+                category: 'heterogeneous',
+                context: 'แผ่นหินแกรนิตที่ใช้ปูพื้นหรือทำครกหิน สังเกตจุดสีขาว ดำ และเทาบนเนื้อหิน',
+                visualType: 'granite',
+                wrongFeedback: 'สังเกตลวดลายบนเนื้อหินแกรนิต! จะเห็นเม็ดแร่สีดำ สีขาว และสีเทากระจายตัวสลับกัน ไม่เป็นสีเดียวหรือเนื้อเดียวกันตลอดทั้งก้อน',
+                explanation: 'หินแกรนิตประกอบด้วยแร่หลายชนิดที่มีสีและลักษณะต่างกันเรียงตัวปะปนกัน มองเห็นแยกส่วนชัดเจน จัดเป็นสารเนื้อผสม'
+            },
+            {
+                id: 14,
+                stage: 'ขั้นที่ 3 : วิเคราะห์ตัวหลอก',
+                mode: 'inspect',
+                name: 'แอลกอฮอล์ล้างแผล (เอทิลแอลกอฮอล์ 70%)',
+                category: 'homogeneous',
+                context: 'น้ำยาล้างแผลสีฟ้าใสในขวด ซึ่งประกอบด้วยเอทิลแอลกอฮอล์ 70% ผสมกับน้ำ 30%',
+                visualType: 'alcohol',
+                wrongFeedback: 'แม้จะมีแอลกอฮอล์ผสมกับน้ำและสีฟ้า แต่ทุกส่วนละลายกลมกลืนเป็นของเหลวใสเนื้อเดียวกันตลอดทั้งขวด ไม่แยกชั้น จึงเป็นสารเนื้อเดียว',
+                explanation: 'เอทิลแอลกอฮอล์และน้ำละลายเข้ากันอย่างสมบูรณ์ มองเห็นใสกลมกลืนเป็นเนื้อเดียวกันทุกส่วน จัดเป็นสารเนื้อเดียว'
+            },
+            {
+                id: 15,
+                stage: 'ขั้นที่ 3 : วิเคราะห์ตัวหลอก',
+                mode: 'mix',
+                name: 'น้ำสลัด / น้ำมันพืชผสมน้ำ',
+                category: 'heterogeneous',
+                context: 'เทน้ำมันพืชลงในน้ำ แล้วลองเขย่าแรงๆ จากนั้นสังเกตการกระจายตัวของหยดน้ำมัน',
+                ingredients: [
+                    { id: 'water', label: '💧 น้ำสะอาด', color: '#bae6fd' },
+                    { id: 'oil', label: '🟡 น้ำมันพืช', color: '#facc15' }
+                ],
+                visualType: 'oil_water',
+                wrongFeedback: 'แม้จะเขย่าจนแตกเป็นหยดเล็กๆ น้ำมันก็ยังไม่ละลายรวมกับน้ำ เมื่อซูมดูจะเห็นหยดน้ำมันแยกตัวและลอยขึ้นแยกชั้นด้านบนเสมอ',
+                explanation: 'น้ำมันไม่ละลายในน้ำ เกิดเป็นหยดน้ำมันกระจายตัวและแยกชั้นลอยอยู่ด้านบนอย่างชัดเจน จัดเป็นสารเนื้อผสม'
+            }
+        ];
+
+        // =====================================================================
+        // 2. สถานะการทำงานของเกม (State & LocalStorage)
+        // =====================================================================
+        const STORAGE_KEY = 'sci_game_mixture-sep-m1';
+        const STATS_KEY = 'sci_game_mixture-sep-m1_stats';
+
+        let currentIdx = 0;
+        let currentStageFilter = 'all';
+        let completedSet = new Set();
+        let mistakeCounts = {}; // { substanceId: count }
+
+        // สถานะการเล่นในแต่ละด่าน
+        let addedIngredients = new Set();
+        let stirProgress = 0; // 0 ถึง 100
+        let isZoomed = false;
+        let stirInterval = null;
+
+        function loadProgress() {
+            try {
+                const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+                if (Array.isArray(saved)) completedSet = new Set(saved);
+                const stats = JSON.parse(localStorage.getItem(STATS_KEY) || '{}');
+                if (stats && typeof stats === 'object') mistakeCounts = stats;
+            } catch (e) {}
+        }
+
+        function saveProgress() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(Array.from(completedSet)));
+                localStorage.setItem(STATS_KEY, JSON.stringify(mistakeCounts));
+            } catch (e) {}
+        }
+
+        // =====================================================================
+        // 3. การจัดการด่านและการแสดงผล UI
+        // =====================================================================
+        function setStageFilter(stage) {
+            currentStageFilter = stage;
+            document.querySelectorAll('.stage-tab-btn').forEach(btn => {
+                if (btn.dataset.stage === stage) {
+                    btn.className = 'stage-tab-btn font-prompt text-xs font-bold px-2.5 py-1 rounded-lg bg-white text-sky-900 shadow-xs';
+                } else {
+                    btn.className = 'stage-tab-btn font-prompt text-xs font-semibold px-2.5 py-1 rounded-lg bg-sky-900/50 text-sky-100 hover:bg-sky-700';
+                }
+            });
+            renderLevelSelector();
+
+            if (stage !== 'all' && SUBSTANCES[currentIdx].stage !== stage) {
+                const firstIdx = SUBSTANCES.findIndex(s => s.stage === stage);
+                if (firstIdx !== -1) loadLevel(firstIdx);
+            }
+        }
+
+        function renderLevelSelector() {
+            const container = document.getElementById('levelSelector');
+            container.innerHTML = '';
+
+            SUBSTANCES.forEach((item, idx) => {
+                if (currentStageFilter !== 'all' && item.stage !== currentStageFilter) return;
+
+                const isCurrent = idx === currentIdx;
+                const isDone = completedSet.has(item.id);
+
+                const btn = document.createElement('button');
+                btn.onclick = () => loadLevel(idx);
+
+                let cls = 'flex-shrink-0 w-9 h-9 rounded-xl font-prompt font-bold text-sm flex items-center justify-center transition-all ';
+                if (isCurrent) {
+                    cls += 'bg-amber-300 text-sky-950 ring-2 ring-white shadow-md scale-105';
+                } else if (isDone) {
+                    cls += 'bg-emerald-500 text-white border border-emerald-300';
+                } else {
+                    cls += 'bg-sky-900/60 text-sky-100 hover:bg-sky-600 border border-sky-400/40';
+                }
+
+                btn.className = cls;
+                btn.innerHTML = isDone && !isCurrent ? '✓' : `${item.id}`;
+                container.appendChild(btn);
+            });
+
+            document.getElementById('notebookBadge').textContent = `${completedSet.size}/${SUBSTANCES.length}`;
+        }
+
+        function loadLevel(index) {
+            currentIdx = index;
+            const item = SUBSTANCES[index];
+
+            addedIngredients = new Set();
+            stirProgress = 0;
+            isZoomed = false;
+            stopStirring();
+
+            document.getElementById('levelBadge').textContent = `ด่านที่ ${item.id}/${SUBSTANCES.length}`;
+            const stageBadge = document.getElementById('stageBadge');
+            stageBadge.textContent = item.stage;
+            if (item.stage.includes('ขั้นที่ 1')) {
+                stageBadge.className = 'bg-emerald-100 text-emerald-800 font-semibold text-xs px-2.5 py-0.5 rounded-full';
+            } else if (item.stage.includes('ขั้นที่ 2')) {
+                stageBadge.className = 'bg-amber-100 text-amber-800 font-semibold text-xs px-2.5 py-0.5 rounded-full';
+            } else {
+                stageBadge.className = 'bg-purple-100 text-purple-800 font-semibold text-xs px-2.5 py-0.5 rounded-full';
+            }
+
+            document.getElementById('modeBadge').textContent = item.mode === 'mix' ? '🧪 โหมดผสมและคนสาร' : '🔬 โหมดสังเกตและซูมเนื้อสาร';
+            document.getElementById('substanceTitle').textContent = item.name;
+            document.getElementById('substanceContext').textContent = item.context;
+            document.getElementById('feedbackCard').classList.add('hidden');
+
+            updateZoomButtonUI();
+            setupModeControls(item);
+            renderLevelSelector();
+            renderVisualScene();
+        }
+
+        function resetCurrentLevel() {
+            loadLevel(currentIdx);
+        }
+
+        function setupModeControls(item) {
+            const tray = document.getElementById('ingredientsTray');
+            const stirArea = document.getElementById('stirActionArea');
+            const prompt = document.getElementById('instructionPrompt');
+
+            if (item.mode === 'mix') {
+                tray.classList.remove('hidden');
+                stirArea.classList.add('hidden');
+                prompt.textContent = 'ขั้นที่ 1: ลากหรือแตะสารตั้งต้นด้านล่างลงบีกเกอร์';
+                renderIngredientButtons(item);
+            } else {
+                tray.classList.add('hidden');
+                stirArea.classList.add('hidden');
+                prompt.textContent = 'ลองกด "ซูมดูเนื้อสาร" เพื่อตรวจสอบความสม่ำเสมอ';
+            }
+            updateAnswerButtonsLock();
+        }
+
+        function renderIngredientButtons(item) {
+            const container = document.getElementById('ingredientButtons');
+            container.innerHTML = '';
+            document.getElementById('ingCountText').textContent = `ใส่แล้ว ${addedIngredients.size}/${item.ingredients.length}`;
+
+            item.ingredients.forEach(ing => {
+                const isAdded = addedIngredients.has(ing.id);
+                const btn = document.createElement('button');
+                btn.draggable = !isAdded;
+                btn.disabled = isAdded;
+                btn.ondragstart = (e) => {
+                    e.dataTransfer.setData('text/plain', ing.id);
+                };
+                btn.onclick = () => addIngredientToBeaker(ing.id);
+
+                btn.className = isAdded
+                    ? 'py-2.5 px-3 rounded-xl bg-emerald-50 border-2 border-emerald-300 text-emerald-800 font-prompt font-semibold text-xs sm:text-sm flex items-center justify-center gap-1.5 opacity-75'
+                    : 'btn-tactile py-2.5 px-3 rounded-xl bg-white hover:bg-sky-50 border-2 border-sky-300 text-slate-800 font-prompt font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 shadow-2xs cursor-grab active:cursor-grabbing';
+
+                btn.innerHTML = isAdded
+                    ? `<span>✓</span> <span>ใส่ ${ing.label.replace(/^[^\s]+\s/, '')} แล้ว</span>`
+                    : `<span>${ing.label}</span>`;
+
+                container.appendChild(btn);
+            });
+        }
+
+        // =====================================================================
+        // 4. ระบบโต้ตอบสัมผัส : ลากวางสารลงบีกเกอร์ + กดคน/เขย่า + ซูมเนื้อสาร
+        // =====================================================================
+        function handleDragOver(e) {
+            e.preventDefault();
+            document.getElementById('beakerDropZone').classList.add('border-sky-500', 'bg-sky-100/70');
+        }
+
+        function handleDragLeave(e) {
+            document.getElementById('beakerDropZone').classList.remove('border-sky-500', 'bg-sky-100/70');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            document.getElementById('beakerDropZone').classList.remove('border-sky-500', 'bg-sky-100/70');
+            const ingId = e.dataTransfer.getData('text/plain');
+            if (ingId) addIngredientToBeaker(ingId);
+        }
+
+        function addIngredientToBeaker(ingId) {
+            const item = SUBSTANCES[currentIdx];
+            if (item.mode !== 'mix' || addedIngredients.has(ingId)) return;
+
+            addedIngredients.add(ingId);
+            renderIngredientButtons(item);
+            renderVisualScene();
+
+            if (addedIngredients.size === item.ingredients.length) {
+                document.getElementById('stirActionArea').classList.remove('hidden');
+                document.getElementById('instructionPrompt').textContent = 'ขั้นที่ 2: กดปุ่มคน/เขย่าสารให้เข้ากัน!';
+            }
+            updateAnswerButtonsLock();
+        }
+
+        function pulseStir() {
+            const item = SUBSTANCES[currentIdx];
+            if (item.mode !== 'mix' || addedIngredients.size < item.ingredients.length) return;
+            if (stirProgress >= 100) return;
+
+            stirProgress = Math.min(100, stirProgress + 34);
+            document.getElementById('stirProgressBar').style.width = `${stirProgress}%`;
+
+            const wrapper = document.getElementById('beakerVisualWrapper');
+            wrapper.classList.add('beaker-shaking');
+            setTimeout(() => {
+                if (!stirInterval) wrapper.classList.remove('beaker-shaking');
+            }, 350);
+
+            if (stirProgress >= 100) {
+                document.getElementById('stirBtnText').textContent = '✓ คนเข้ากันเรียบร้อย! ลองซูมดูเนื้อสาร';
+                document.getElementById('stirBtn').className = 'py-2 px-4 rounded-2xl bg-emerald-600 text-white font-prompt font-bold text-xs sm:text-sm shadow-xs flex items-center gap-1.5';
+                document.getElementById('instructionPrompt').textContent = 'ขั้นที่ 3: สังเกตผล (หรือกดซูม) แล้วเลือกคำตอบ';
+            }
+
+            renderVisualScene();
+            updateAnswerButtonsLock();
+        }
+
+        function startStirring() {
+            pulseStir();
+            if (stirInterval) clearInterval(stirInterval);
+            stirInterval = setInterval(() => {
+                if (stirProgress >= 100) {
+                    stopStirring();
+                } else {
+                    pulseStir();
+                }
+            }, 220);
+        }
+
+        function stopStirring() {
+            if (stirInterval) {
+                clearInterval(stirInterval);
+                stirInterval = null;
+            }
+            document.getElementById('beakerVisualWrapper').classList.remove('beaker-shaking');
+        }
+
+        function updateAnswerButtonsLock() {
+            const item = SUBSTANCES[currentIdx];
+            const isReadyToAnswer = (item.mode === 'inspect') || (addedIngredients.size === item.ingredients.length && stirProgress >= 100);
+
+            document.getElementById('btnHomogeneous').disabled = !isReadyToAnswer;
+            document.getElementById('btnHeterogeneous').disabled = !isReadyToAnswer;
+
+            const lockNotice = document.getElementById('lockNotice');
+            if (isReadyToAnswer) {
+                lockNotice.classList.add('hidden');
+            } else {
+                lockNotice.classList.remove('hidden');
+            }
+        }
+
+        function toggleMicroZoom() {
+            isZoomed = !isZoomed;
+            updateZoomButtonUI();
+            renderVisualScene();
+        }
+
+        function updateZoomButtonUI() {
+            const btn = document.getElementById('zoomToggleBtn');
+            const indicator = document.getElementById('viewModeIndicator');
+            if (isZoomed) {
+                btn.className = 'btn-tactile flex items-center gap-1.5 bg-indigo-600 text-white font-prompt font-bold text-xs sm:text-sm px-3 py-1.5 rounded-xl border-2 border-indigo-700 shadow-sm';
+                document.getElementById('zoomIcon').textContent = '👁️';
+                document.getElementById('zoomLabel').textContent = 'กลับมุมมองปกติ';
+                indicator.textContent = '🔬 กำลังซูมขยายดูเนื้อสาร (100x)';
+                indicator.className = 'absolute top-2.5 left-2.5 z-10 bg-indigo-600 text-white px-2.5 py-1 rounded-full text-[11px] font-prompt font-bold shadow-xs';
+            } else {
+                btn.className = 'btn-tactile flex items-center gap-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-800 font-prompt font-bold text-xs sm:text-sm px-3 py-1.5 rounded-xl border-2 border-indigo-300 shadow-2xs';
+                document.getElementById('zoomIcon').textContent = '🔬';
+                document.getElementById('zoomLabel').textContent = 'ซูมดูเนื้อสาร';
+                indicator.textContent = '👁️ มุมมองตาเปล่า (1x)';
+                indicator.className = 'absolute top-2.5 left-2.5 z-10 bg-white/90 backdrop-blur-xs border border-slate-200 px-2.5 py-1 rounded-full text-[11px] font-prompt font-semibold text-slate-700 shadow-2xs';
+            }
+        }
+
+        // =====================================================================
+        // 5. วาดภาพจำลองบีกเกอร์ / วัตถุ และภาพขยายอนุภาค (SVG Visual Renderer)
+        // =====================================================================
+        function renderVisualScene() {
+            const svg = document.getElementById('substanceSvg');
+            const item = SUBSTANCES[currentIdx];
+
+            if (isZoomed) {
+                svg.innerHTML = buildMicroZoomSVG(item);
+            } else {
+                svg.innerHTML = buildMacroViewSVG(item);
+            }
+        }
+
+        // มุมมองตาเปล่า (1x)
+        function buildMacroViewSVG(item) {
+            // กรณีของแข็งหรือแก๊สในโหมด inspect
+            if (item.visualType === 'brass' || item.visualType === 'coin' || item.visualType === 'granite' || item.visualType === 'clean_air' || item.visualType === 'smoke') {
+                if (item.visualType === 'brass') {
+                    return `
+                        <defs>
+                            <linearGradient id="brassGrad" x1="0" y1="0" x2="1" y2="1">
+                                <stop offset="0%" stop-color="#fef08a"/>
+                                <stop offset="50%" stop-color="#eab308"/>
+                                <stop offset="100%" stop-color="#a16207"/>
+                            </linearGradient>
+                        </defs>
+                        <ellipse cx="130" cy="145" rx="82" ry="52" fill="url(#brassGrad)" stroke="#854d0e" stroke-width="3"/>
+                        <ellipse cx="130" cy="122" rx="82" ry="24" fill="#fef9c3" stroke="#a16207" stroke-width="2.5"/>
+                        <ellipse cx="130" cy="122" rx="68" ry="16" fill="#ca8a04"/>
+                        <text x="130" y="225" text-anchor="middle" fill="#475569" font-family="Prompt" font-weight="bold" font-size="13">เนื้อโลหะสีเหลืองทองเนียนเสมอกัน</text>
+                    `;
+                }
+                if (item.visualType === 'coin') {
+                    return `
+                        <defs>
+                            <linearGradient id="coinGrad" x1="0" y1="0" x2="1" y2="1">
+                                <stop offset="0%" stop-color="#f8fafc"/>
+                                <stop offset="50%" stop-color="#cbd5e1"/>
+                                <stop offset="100%" stop-color="#64748b"/>
+                            </linearGradient>
+                        </defs>
+                        <circle cx="130" cy="135" r="72" fill="url(#coinGrad)" stroke="#475569" stroke-width="3"/>
+                        <circle cx="130" cy="135" r="60" fill="none" stroke="#94a3b8" stroke-width="2" stroke-dasharray="4 3"/>
+                        <text x="130" y="144" text-anchor="middle" fill="#334155" font-family="Prompt" font-weight="bold" font-size="32">1 ฿</text>
+                        <text x="130" y="232" text-anchor="middle" fill="#475569" font-family="Prompt" font-weight="bold" font-size="13">เนื้อโลหะสีเงินกลมกลืนทั้งเหรียญ</text>
+                    `;
+                }
+                if (item.visualType === 'granite') {
+                    let speckles = '';
+                    const colors = ['#1e293b', '#f8fafc', '#64748b', '#cbd5e1', '#0f172a'];
+                    for (let i = 0; i < 45; i++) {
+                        const sx = 68 + ((i * 29) % 124);
+                        const sy = 75 + ((i * 43) % 115);
+                        const col = colors[i % colors.length];
+                        speckles += `<polygon points="${sx},${sy} ${sx+8},${sy+3} ${sx+4},${sy+9}" fill="${col}" opacity="0.85"/>`;
+                    }
+                    return `
+                        <rect x="60" y="65" width="140" height="135" rx="18" fill="#94a3b8" stroke="#334155" stroke-width="3"/>
+                        ${speckles}
+                        <text x="130" y="226" text-anchor="middle" fill="#475569" font-family="Prompt" font-weight="bold" font-size="13">เห็นผลึกแร่ขาว-ดำ-เทาปะปนกัน</text>
+                    `;
+                }
+                if (item.visualType === 'clean_air') {
+                    return `
+                        <rect x="55" y="55" width="150" height="150" rx="24" fill="#e0f2fe" stroke="#38bdf8" stroke-width="2.5" stroke-dasharray="6 4"/>
+                        <path d="M80 115 Q130 95 180 115" fill="none" stroke="#0284c7" stroke-width="3" stroke-linecap="round" opacity="0.6"/>
+                        <path d="M75 145 Q130 125 185 145" fill="none" stroke="#0284c7" stroke-width="3" stroke-linecap="round" opacity="0.6"/>
+                        <text x="130" y="228" text-anchor="middle" fill="#0369a1" font-family="Prompt" font-weight="bold" font-size="13">อากาศโปร่งใส ไร้ฝุ่นควันปะปน</text>
+                    `;
+                }
+                if (item.visualType === 'smoke') {
+                    return `
+                        <circle cx="115" cy="145" r="36" fill="#64748b" opacity="0.55"/>
+                        <circle cx="150" cy="130" r="42" fill="#475569" opacity="0.6"/>
+                        <circle cx="125" cy="105" r="35" fill="#94a3b8" opacity="0.65"/>
+                        <circle cx="105" cy="135" r="3" fill="#0f172a"/>
+                        <circle cx="145" cy="120" r="3.5" fill="#0f172a"/>
+                        <circle cx="130" cy="150" r="2.5" fill="#0f172a"/>
+                        <text x="130" y="228" text-anchor="middle" fill="#475569" font-family="Prompt" font-weight="bold" font-size="13">กลุ่มควันขุ่นเทาลอยในอากาศ</text>
+                    `;
+                }
+            }
+
+            // กรณีสารในบีกเกอร์ (ทั้งโหมด mix และ inspect)
+            const isMixed = (item.mode === 'inspect') || (stirProgress >= 100);
+            const hasFirst = (item.mode === 'inspect') || addedIngredients.has(item.ingredients[0].id);
+            const hasSecond = (item.mode === 'inspect') || (item.ingredients[1] && addedIngredients.has(item.ingredients[1].id));
+
+            let liquidColor = 'transparent';
+            let extraDetails = '';
+
+            if (hasFirst) {
+                liquidColor = '#bae6fd'; // สีน้ำเริ่มต้น
+            }
+
+            if (item.visualType === 'salt_water' || item.visualType === 'syrup') {
+                if (hasSecond && !isMixed) {
+                    // กองเกลือ/น้ำตาลที่ก้นบีกเกอร์ก่อนคน
+                    extraDetails = `<path d="M85 198 Q130 175 175 198 Z" fill="${item.visualType === 'syrup' ? '#fde68a' : '#ffffff'}" stroke="#cbd5e1" stroke-width="1.5"/>`;
+                } else if (hasSecond && isMixed) {
+                    liquidColor = item.visualType === 'syrup' ? '#fef3c7' : '#e0f2fe';
+                }
+            } else if (item.visualType === 'mud_water') {
+                if (hasSecond && !isMixed) {
+                    extraDetails = `<path d="M80 198 Q130 165 180 198 Z" fill="#78350f"/>`;
+                } else if (hasSecond && isMixed) {
+                    liquidColor = '#b45309';
+                    extraDetails = `
+                        <rect x="72" y="176" width="116" height="22" rx="4" fill="#451a03" opacity="0.85"/>
+                        <circle cx="95" cy="135" r="3" fill="#451a03"/><circle cx="155" cy="150" r="3.5" fill="#451a03"/>
+                        <circle cx="120" cy="120" r="2.5" fill="#451a03"/><circle cx="140" cy="162" r="3" fill="#451a03"/>
+                    `;
+                }
+            } else if (item.visualType === 'chili_sauce') {
+                if (hasFirst) liquidColor = '#9a3412';
+                if (hasSecond) {
+                    extraDetails = `
+                        <circle cx="95" cy="125" r="5" fill="#ef4444"/><circle cx="145" cy="140" r="4.5" fill="#ef4444"/>
+                        <circle cx="115" cy="165" r="5" fill="#fef08a"/><circle cx="160" cy="118" r="4" fill="#16a34a"/>
+                        <circle cx="130" cy="135" r="4" fill="#ef4444"/><circle cx="90" cy="175" r="4.5" fill="#fef08a"/>
+                    `;
+                }
+            } else if (item.visualType === 'vinegar_sediment') {
+                liquidColor = '#fef3c7';
+                extraDetails = `
+                    <path d="M72 182 Q130 174 188 182 L188 198 L72 198 Z" fill="#b45309" opacity="0.85"/>
+                    <text x="130" y="193" text-anchor="middle" fill="#ffffff" font-family="Prompt" font-size="9" font-weight="bold">ตะกอนนอนก้น</text>
+                `;
+            } else if (item.visualType === 'milk') {
+                liquidColor = '#ffffff';
+                extraDetails = `<text x="130" y="145" text-anchor="middle" fill="#94a3b8" font-family="Prompt" font-size="11">ดูขาวเนียน (ลองกดซูม!)</text>`;
+            } else if (item.visualType === 'coconut_milk') {
+                if (hasSecond) {
+                    liquidColor = '#fefce8';
+                    if (isMixed) {
+                        extraDetails = `<rect x="72" y="102" width="116" height="14" fill="#fef9c3" opacity="0.95"/>`;
+                    }
+                }
+            } else if (item.visualType === 'soda') {
+                liquidColor = '#dbeafe';
+                extraDetails = `
+                    <circle cx="95" cy="170" r="3" fill="#ffffff"/><circle cx="115" cy="145" r="4" fill="#ffffff"/>
+                    <circle cx="145" cy="160" r="3.5" fill="#ffffff"/><circle cx="130" cy="120" r="4.5" fill="#ffffff"/>
+                    <circle cx="160" cy="135" r="3" fill="#ffffff"/><circle cx="105" cy="115" r="3.5" fill="#ffffff"/>
+                `;
+            } else if (item.visualType === 'alcohol') {
+                liquidColor = '#7dd3fc';
+            } else if (item.visualType === 'oil_water') {
+                if (hasSecond) {
+                    if (!isMixed) {
+                        extraDetails = `<rect x="72" y="102" width="116" height="26" fill="#facc15" opacity="0.9"/>`;
+                    } else {
+                        extraDetails = `
+                            <rect x="72" y="102" width="116" height="18" fill="#facc15" opacity="0.9"/>
+                            <circle cx="100" cy="140" r="5" fill="#facc15"/><circle cx="145" cy="155" r="6" fill="#facc15"/>
+                            <circle cx="125" cy="132" r="4.5" fill="#facc15"/><circle cx="160" cy="142" r="4" fill="#facc15"/>
+                        `;
+                    }
+                }
+            }
+
+            return `
+                <!-- ของเหลวภายในบีกเกอร์ -->
+                ${hasFirst ? `<rect x="72" y="102" width="116" height="96" rx="6" fill="${liquidColor}" />` : ''}
+                ${extraDetails}
+
+                <!-- ตัวบีกเกอร์แก้ว -->
+                <path d="M66 68 L72 195 Q72 202 80 202 L180 202 Q188 202 188 195 L194 68"
+                      fill="none" stroke="#334155" stroke-width="4" stroke-linecap="round" />
+                <ellipse cx="130" cy="68" rx="64" ry="8" fill="none" stroke="#334155" stroke-width="3" />
+
+                <!-- ขีดบอกปริมาตร -->
+                <line x1="82" y1="120" x2="96" y2="120" stroke="#64748b" stroke-width="2" />
+                <line x1="82" y1="150" x2="102" y2="150" stroke="#64748b" stroke-width="2" />
+                <line x1="82" y1="180" x2="96" y2="180" stroke="#64748b" stroke-width="2" />
+
+                ${!hasFirst ? `<text x="130" y="142" text-anchor="middle" fill="#94a3b8" font-family="Prompt" font-size="12">บีกเกอร์ว่าง (ใส่สารเลย)</text>` : ''}
+            `;
+        }
+
+        // มุมมองกล้องขยาย "ซูมดูเนื้อสาร (100x)"
+        function buildMicroZoomSVG(item) {
+            const isHomo = item.category === 'homogeneous';
+            let innerContent = '';
+
+            if (isHomo) {
+                // แสดงอนุภาคกระจายตัวสม่ำเสมอเป็นระเบียบและกลมกลืน
+                const bgCol = item.visualType === 'brass' ? '#fef08a'
+                            : item.visualType === 'coin' ? '#e2e8f0'
+                            : item.visualType === 'alcohol' ? '#bae6fd'
+                            : '#e0f2fe';
+                const dotA = item.visualType === 'brass' ? '#d97706'
+                           : item.visualType === 'coin' ? '#475569'
+                           : '#0284c7';
+                const dotB = item.visualType === 'brass' ? '#eab308'
+                           : item.visualType === 'coin' ? '#94a3b8'
+                           : '#38bdf8';
+
+                innerContent += `<circle cx="130" cy="130" r="95" fill="${bgCol}" />`;
+                for (let row = -3; row <= 3; row++) {
+                    for (let col = -3; col <= 3; col++) {
+                        const px = 130 + col * 24 + (row % 2 === 0 ? 6 : -6);
+                        const py = 130 + row * 24;
+                        if (Math.hypot(px - 130, py - 130) < 82) {
+                            const c = (row + col) % 2 === 0 ? dotA : dotB;
+                            innerContent += `<circle cx="${px}" cy="${py}" r="5.5" fill="${c}" opacity="0.85"/>`;
+                        }
+                    }
+                }
+            } else {
+                // แสดงหยดไขมัน / ตะกอน / ฟองแก๊ส / ฝุ่นควัน กระจายตัวไม่สม่ำเสมอ
+                const bgCol = item.visualType === 'milk' || item.visualType === 'coconut_milk' ? '#f8fafc'
+                            : item.visualType === 'mud_water' ? '#fef3c7'
+                            : item.visualType === 'chili_sauce' ? '#ffedd5'
+                            : item.visualType === 'smoke' ? '#f1f5f9'
+                            : '#e0f2fe';
+
+                innerContent += `<circle cx="130" cy="130" r="95" fill="${bgCol}" />`;
+
+                const blobColor = item.visualType === 'milk' || item.visualType === 'coconut_milk' ? '#facc15'
+                                : item.visualType === 'mud_water' || item.visualType === 'vinegar_sediment' ? '#78350f'
+                                : item.visualType === 'chili_sauce' ? '#dc2626'
+                                : item.visualType === 'soda' ? '#ffffff'
+                                : item.visualType === 'smoke' ? '#334155'
+                                : item.visualType === 'granite' ? '#1e293b'
+                                : '#eab308';
+
+                const blobs = [
+                    { x: 95, y: 95, r: 16 }, { x: 155, y: 105, r: 22 }, { x: 120, y: 145, r: 19 },
+                    { x: 165, y: 160, r: 14 }, { x: 88, y: 155, r: 12 }, { x: 135, y: 80, r: 10 },
+                    { x: 110, y: 185, r: 15 }, { x: 175, y: 130, r: 9 }
+                ];
+                blobs.forEach(b => {
+                    innerContent += `<circle class="particle-float" cx="${b.x}" cy="${b.y}" r="${b.r}" fill="${blobColor}" stroke="#64748b" stroke-width="1.5" opacity="0.9"/>`;
+                });
+            }
+
+            return `
+                ${innerContent}
+                <!-- กรอบเลนส์กล้องขยาย -->
+                <circle cx="130" cy="130" r="95" fill="none" stroke="#312e81" stroke-width="6" />
+                <line x1="130" y1="35" x2="130" y2="225" stroke="#4f46e5" stroke-width="1" stroke-dasharray="3 3" opacity="0.4" />
+                <line x1="35" y1="130" x2="225" y2="130" stroke="#4f46e5" stroke-width="1" stroke-dasharray="3 3" opacity="0.4" />
+                <text x="130" y="248" text-anchor="middle" fill="#312e81" font-family="Prompt" font-weight="bold" font-size="12">
+                    ${isHomo ? 'อนุภาคกลมกลืนสม่ำเสมอทุกบริเวณ' : 'พบอนุภาค/หยดสารขนาดใหญ่แยกตัวไม่สม่ำเสมอ'}
+                </text>
+            `;
+        }
+
+        // =====================================================================
+        // 6. การตรวจคำตอบ, Feedback ทันที, สมุดบันทึก และสรุปผลท้ายรอบ
+        // =====================================================================
+        function submitClassification(chosenCategory) {
+            const item = SUBSTANCES[currentIdx];
+            const feedbackCard = document.getElementById('feedbackCard');
+
+            if (chosenCategory === item.category) {
+                // ตอบถูกต้อง!
+                feedbackCard.classList.add('hidden');
+                completedSet.add(item.id);
+                saveProgress();
+                renderLevelSelector();
+
+                const badge = document.getElementById('modalCategoryBadge');
+                if (item.category === 'homogeneous') {
+                    badge.textContent = '💧 สารเนื้อเดียว';
+                    badge.className = 'inline-block bg-teal-100 text-teal-800 font-prompt font-bold text-xs px-3 py-0.5 rounded-full mb-1';
+                } else {
+                    badge.textContent = '🫧 สารเนื้อผสม';
+                    badge.className = 'inline-block bg-orange-100 text-orange-800 font-prompt font-bold text-xs px-3 py-0.5 rounded-full mb-1';
+                }
+
+                document.getElementById('modalSubstanceName').textContent = item.name;
+                document.getElementById('modalExplanation').textContent = item.explanation;
+
+                const nextBtn = document.getElementById('modalNextBtn');
+                nextBtn.textContent = currentIdx === SUBSTANCES.length - 1
+                    ? '📊 ดูสรุปผลท้ายรอบ (ครบ 15 ด่านแล้ว!)'
+                    : `ไปด่านที่ ${currentIdx + 2} →`;
+
+                document.getElementById('successModal').classList.remove('hidden');
+            } else {
+                // ตอบผิด -> บันทึกสถิติและแสดง Feedback ทันทีพร้อมเปิดโอกาสให้วิเคราะห์ใหม่
+                mistakeCounts[item.id] = (mistakeCounts[item.id] || 0) + 1;
+                saveProgress();
+
+                document.getElementById('feedbackTitle').textContent =
+                    `ยังไม่ใช่นะ! "${item.name}" ไม่ใช่${chosenCategory === 'homogeneous' ? 'สารเนื้อเดียว' : 'สารเนื้อผสม'}`;
+                document.getElementById('feedbackBody').textContent = item.wrongFeedback;
+                feedbackCard.classList.remove('hidden');
+
+                // เปิดซูมให้อัตโนมัติหากเป็นข้อที่ต้องสังเกตละเอียดเพื่อช่วยนักเรียนวิเคราะห์ใหม่
+                if (!isZoomed) {
+                    toggleMicroZoom();
+                }
+            }
+        }
+
+        function closeSuccessModal() {
+            document.getElementById('successModal').classList.add('hidden');
+        }
+
+        function goNextLevel() {
+            closeSuccessModal();
+            if (currentIdx < SUBSTANCES.length - 1) {
+                loadLevel(currentIdx + 1);
+            } else {
+                openSummaryModal();
+            }
+        }
+
+        // --- สมุดบันทึกสาร ---
+        function openNotebookModal() {
+            const list = document.getElementById('notebookList');
+            list.innerHTML = '';
+            document.getElementById('notebookSubtitle').textContent = `สะสมครบแล้ว ${completedSet.size} จาก ${SUBSTANCES.length} ชนิด`;
+
+            SUBSTANCES.forEach(item => {
+                const isUnlocked = completedSet.has(item.id);
+                const card = document.createElement('div');
+                card.className = isUnlocked
+                    ? 'p-3 rounded-2xl bg-slate-50 border border-slate-200'
+                    : 'p-3 rounded-2xl bg-slate-100/70 border border-dashed border-slate-300 opacity-65';
+
+                if (isUnlocked) {
+                    const tag = item.category === 'homogeneous'
+                        ? '<span class="bg-teal-100 text-teal-800 font-prompt font-bold text-[11px] px-2 py-0.5 rounded-full">💧 สารเนื้อเดียว</span>'
+                        : '<span class="bg-orange-100 text-orange-800 font-prompt font-bold text-[11px] px-2 py-0.5 rounded-full">🫧 สารเนื้อผสม</span>';
+                    card.innerHTML = `
+                        <div class="flex items-center justify-between gap-2 mb-1">
+                            <span class="font-prompt font-bold text-sm text-slate-800">${item.id}. ${item.name}</span>
+                            ${tag}
+                        </div>
+                        <p class="text-xs text-slate-600 leading-relaxed">${item.explanation}</p>
+                    `;
+                } else {
+                    card.innerHTML = `
+                        <div class="flex items-center justify-between text-xs font-prompt font-semibold text-slate-500">
+                            <span>🔒 ด่านที่ ${item.id} : ยังไม่ได้บันทึกข้อมูล</span>
+                            <button onclick="closeNotebookModal(); loadLevel(${item.id - 1});" class="text-sky-700 underline">ไปทดลอง</button>
+                        </div>
+                    `;
+                }
+                list.appendChild(card);
+            });
+
+            document.getElementById('notebookModal').classList.remove('hidden');
+        }
+
+        function closeNotebookModal() {
+            document.getElementById('notebookModal').classList.add('hidden');
+        }
+
+        // --- หน้าสรุปผลท้ายรอบสำหรับอภิปรายในชั้นเรียน ---
+        function openSummaryModal() {
+            const homoAll = SUBSTANCES.filter(s => s.category === 'homogeneous');
+            const heteroAll = SUBSTANCES.filter(s => s.category === 'heterogeneous');
+            const homoDone = homoAll.filter(s => completedSet.has(s.id)).length;
+            const heteroDone = heteroAll.filter(s => completedSet.has(s.id)).length;
+
+            document.getElementById('sumPassedCount').textContent = `${completedSet.size}/${SUBSTANCES.length}`;
+            document.getElementById('sumHomoCount').textContent = `${homoDone}/${homoAll.length}`;
+            document.getElementById('sumHeteroCount').textContent = `${heteroDone}/${heteroAll.length}`;
+
+            // รายการจุดที่ตอบผิดบ่อย
+            const mistakeList = document.getElementById('mistakeReviewList');
+            mistakeList.innerHTML = '';
+            const mistakes = SUBSTANCES
+                .filter(s => (mistakeCounts[s.id] || 0) > 0)
+                .sort((a, b) => mistakeCounts[b.id] - mistakeCounts[a.id]);
+
+            if (mistakes.length === 0) {
+                mistakeList.innerHTML = `
+                    <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-3 text-xs text-emerald-800 font-medium">
+                        🌟 ยอดเยี่ยมมาก! ยังไม่มีจุดที่ตอบผิดในรอบนี้ (หรือลองเล่นให้ครบทุกด่านเพื่อตรวจสอบความเข้าใจ)
+                    </div>
+                `;
+            } else {
+                mistakes.forEach(m => {
+                    const div = document.createElement('div');
+                    div.className = 'bg-rose-50 border border-rose-200 rounded-xl p-2.5 text-xs';
+                    div.innerHTML = `
+                        <div class="flex items-center justify-between font-prompt font-bold text-rose-900 mb-1">
+                            <span>• ${m.name}</span>
+                            <span class="bg-rose-200 text-rose-900 px-2 py-0.5 rounded-full text-[10px]">ตอบผิด ${mistakeCounts[m.id]} ครั้ง</span>
+                        </div>
+                        <p class="text-slate-700 leading-relaxed">
+                            <strong>เฉลย (${m.category === 'homogeneous' ? 'สารเนื้อเดียว' : 'สารเนื้อผสม'}):</strong> ${m.explanation}
+                        </p>
+                    `;
+                    mistakeList.appendChild(div);
+                });
+            }
+
+            // รายชื่อสารทั้ง 2 กลุ่ม
+            document.getElementById('summaryHomoList').innerHTML = homoAll
+                .map(s => `<li>${completedSet.has(s.id) ? '✅' : '▫️'} ${s.name.split(' (')[0]}</li>`).join('');
+            document.getElementById('summaryHeteroList').innerHTML = heteroAll
+                .map(s => `<li>${completedSet.has(s.id) ? '✅' : '▫️'} ${s.name.split(' (')[0]}</li>`).join('');
+
+            document.getElementById('summaryModal').classList.remove('hidden');
+        }
+
+        function closeSummaryModal() {
+            document.getElementById('summaryModal').classList.add('hidden');
+        }
+
+        function resetAllProgress() {
+            completedSet.clear();
+            mistakeCounts = {};
+            saveProgress();
+            closeSummaryModal();
+            loadLevel(0);
+        }
+
+        window.onload = function() {
+            loadProgress();
+            loadLevel(0);
+        };
+    </script>
+</body>
+</html>

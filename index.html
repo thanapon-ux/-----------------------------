@@ -91,26 +91,49 @@
                     </div>
                 </div>
 
-                <!-- แถบเลือกหมวดหมู่ตามระดับชั้น (Grade Level Tabs) -->
+                <!-- แถบเลือกหมวดหมู่ตามระดับชั้น (Grade Level Tabs : เป้าหมายชั้นละ 30 เกม) -->
                 <div class="mt-6 flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
                     <button onclick="setGradeFilter('all')" data-grade="all" class="grade-tab-btn btn-tactile flex-shrink-0 font-prompt font-bold text-sm px-4 py-2 rounded-xl bg-white text-indigo-900 shadow-md">
-                        ทั้งหมด
+                        ทั้งหมด (เป้าหมาย 90)
                     </button>
                     <button onclick="setGradeFilter('ม.1')" data-grade="ม.1" class="grade-tab-btn btn-tactile flex-shrink-0 font-prompt font-semibold text-sm px-4 py-2 rounded-xl bg-white/15 hover:bg-white/25 text-white border border-white/20">
-                        ชั้น ม.1
+                        ชั้น ม.1 <span id="badgeCountM1" class="ml-1 text-xs opacity-90">(0/30)</span>
                     </button>
                     <button onclick="setGradeFilter('ม.2')" data-grade="ม.2" class="grade-tab-btn btn-tactile flex-shrink-0 font-prompt font-semibold text-sm px-4 py-2 rounded-xl bg-white/15 hover:bg-white/25 text-white border border-white/20">
-                        ชั้น ม.2
+                        ชั้น ม.2 <span id="badgeCountM2" class="ml-1 text-xs opacity-90">(1/30)</span>
                     </button>
                     <button onclick="setGradeFilter('ม.3')" data-grade="ม.3" class="grade-tab-btn btn-tactile flex-shrink-0 font-prompt font-semibold text-sm px-4 py-2 rounded-xl bg-white/15 hover:bg-white/25 text-white border border-white/20">
-                        ชั้น ม.3
+                        ชั้น ม.3 <span id="badgeCountM3" class="ml-1 text-xs opacity-90">(1/30)</span>
                     </button>
+                </div>
+
+                <!-- ช่องค้นหาเกมสำหรับคลัง 90 เกม -->
+                <div class="mt-3 relative">
+                    <span class="absolute inset-y-0 left-3.5 flex items-center text-indigo-200 text-sm">🔍</span>
+                    <input id="hubSearchInput" type="text" oninput="renderHubCatalog()" placeholder="ค้นหาชื่อเกม, บทเรียน หรือรหัสเกม (เช่น แรง, เคมี, เซลล์, M2-01)..."
+                           class="w-full bg-white/15 focus:bg-white text-white focus:text-slate-900 placeholder-indigo-200 focus:placeholder-slate-400 text-sm rounded-xl pl-10 pr-4 py-2.5 border border-white/25 focus:border-white outline-none transition-all">
                 </div>
             </div>
         </header>
 
         <!-- พื้นที่แสดงรายการการ์ดเกมแต่ละเรื่อง -->
         <main class="flex-1 max-w-4xl w-full mx-auto px-4 pt-6">
+            <!-- แถบสรุปความคืบหน้าการพัฒนาคลัง 90 เกม -->
+            <div class="bg-white rounded-2xl p-3.5 border border-slate-200 shadow-2xs mb-5 grid grid-cols-3 gap-2 text-center">
+                <div class="bg-sky-50 rounded-xl p-2 border border-sky-100">
+                    <div class="text-[11px] font-semibold text-sky-700">คลังเกม ม.1</div>
+                    <div id="statReadyM1" class="font-prompt font-bold text-sm sm:text-base text-sky-950">0 / 30 เกม</div>
+                </div>
+                <div class="bg-orange-50 rounded-xl p-2 border border-orange-100">
+                    <div class="text-[11px] font-semibold text-orange-700">คลังเกม ม.2</div>
+                    <div id="statReadyM2" class="font-prompt font-bold text-sm sm:text-base text-orange-950">1 / 30 เกม</div>
+                </div>
+                <div class="bg-teal-50 rounded-xl p-2 border border-teal-100">
+                    <div class="text-[11px] font-semibold text-teal-700">คลังเกม ม.3</div>
+                    <div id="statReadyM3" class="font-prompt font-bold text-sm sm:text-base text-teal-950">1 / 30 เกม</div>
+                </div>
+            </div>
+
             <div class="flex items-center justify-between mb-4">
                 <h2 id="hubSectionTitle" class="font-prompt font-bold text-slate-800 text-lg sm:text-xl">
                     รายการเกมทั้งหมด
@@ -125,12 +148,12 @@
                 <!-- การ์ดเกมจะถูกสร้างด้วย JavaScript จาก GAME_CATALOG -->
             </div>
 
-            <!-- กล่องคำแนะนำสำหรับครูในการเพิ่มเกมใหม่ -->
+            <!-- กล่องคำแนะนำโครงสร้างโฟลเดอร์ใน VS Code สำหรับ 90 เกม -->
             <div class="mt-8 bg-white rounded-2xl p-4 border border-dashed border-indigo-300 flex items-start gap-3 shadow-2xs">
-                <div class="text-2xl">💡</div>
+                <div class="text-2xl">📁</div>
                 <div class="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                    <strong class="font-prompt text-indigo-900 block mb-0.5">พื้นที่พร้อมขยายสำหรับห้องเรียนของคุณครู</strong>
-                    คุณครูสามารถบอกหัวข้อและระดับชั้นของเกมถัดไปที่ต้องการสร้างได้เลย (เช่น เกมแยกสาร ม.1, เกมระบบร่างกาย ม.2 หรือเกมวงจรไฟฟ้า ม.3) ระบบจะเพิ่มเกมใหม่ลงในหมวดหมู่ของชั้นนั้นให้อัตโนมัติค่ะ
+                    <strong class="font-prompt text-indigo-900 block mb-0.5">โครงสร้างโฟลเดอร์ใน VS Code (รองรับ 90 เกม : m1 / m2 / m3)</strong>
+                    เกมใหม่ตั้งแต่เกมที่ 3 เป็นต้นไป จะถูกสร้างแยกเป็นไฟล์อิสระในโฟลเดอร์ <code class="bg-slate-100 px-1.5 py-0.5 rounded text-indigo-700 font-semibold">m1/</code>, <code class="bg-slate-100 px-1.5 py-0.5 rounded text-orange-700 font-semibold">m2/</code> และ <code class="bg-slate-100 px-1.5 py-0.5 rounded text-teal-700 font-semibold">m3/</code> เพื่อไม่ให้โค้ดชนกันและโหลดเร็วบนมือถือค่ะ
                 </div>
             </div>
         </main>
@@ -560,11 +583,15 @@
 
     <script>
         // =====================================================================
-        // 1. คลังเกมวิทยาศาสตร์ทั้งหมดแยกตามระดับชั้น (GAME CATALOG)
+        // 1. คลังเกมวิทยาศาสตร์ทั้งหมดแยกตามระดับชั้น (GAME CATALOG : เป้าหมาย 90 เกม)
+        //    - path: null         -> เปิดเล่นในหน้าหลักทันที (2 เกมแรก)
+        //    - path: 'm1/xxx.html' -> เปิดไฟล์เกมแยกในโฟลเดอร์ m1, m2, m3
         // =====================================================================
+        const TARGET_PER_GRADE = 30;
         const GAME_CATALOG = [
             {
                 id: 'chem-balancing-m3',
+                code: 'M3-01',
                 grade: 'ม.3',
                 subject: 'เคมีพื้นฐาน',
                 title: 'ดุลสมการเคมีผ่านภาพโมเลกุล',
@@ -573,10 +600,12 @@
                 colorGradient: 'from-teal-600 to-cyan-600',
                 badgeBg: 'bg-teal-100 text-teal-800',
                 totalLevels: 25,
-                status: 'ready'
+                status: 'ready',
+                path: null
             },
             {
                 id: 'force-vectors-m2',
+                code: 'M2-01',
                 grade: 'ม.2',
                 subject: 'แรงและการเคลื่อนที่',
                 title: 'เวกเตอร์ของแรง (เหนือ ใต้ ออก ตก)',
@@ -585,22 +614,26 @@
                 colorGradient: 'from-orange-600 to-amber-600',
                 badgeBg: 'bg-orange-100 text-orange-800',
                 totalLevels: 17,
-                status: 'ready'
+                status: 'ready',
+                path: null
             },
             {
                 id: 'mixture-sep-m1',
+                code: 'M1-01',
                 grade: 'ม.1',
                 subject: 'สารรอบตัว',
-                title: 'แยกสารเนื้อเดียวและสารเนื้อผสม',
-                description: 'เลือกวิธีแยกสารให้เหมาะสมกับสมบัติของสารผสมในชีวิตประจำวัน',
+                title: 'จำแนกสารโดยใช้เนื้อสารเป็นเกณฑ์',
+                description: 'ทดลองผสมสาร คน/เขย่า และใช้แว่นขยายซูมดูเนื้อสาร เพื่อจำแนกสารเนื้อเดียวและสารเนื้อผสม ครบ 15 ด่าน',
                 icon: '🧪',
                 colorGradient: 'from-sky-600 to-blue-600',
                 badgeBg: 'bg-sky-100 text-sky-800',
                 totalLevels: 15,
-                status: 'coming_soon'
+                status: 'ready',
+                path: 'm1/g01-separation.html'
             },
             {
                 id: 'cell-structure-m1',
+                code: 'M1-02',
                 grade: 'ม.1',
                 subject: 'หน่วยพื้นฐานของสิ่งมีชีวิต',
                 title: 'สำรวจโครงสร้างเซลล์พืชและเซลล์สัตว์',
@@ -609,10 +642,12 @@
                 colorGradient: 'from-emerald-600 to-green-600',
                 badgeBg: 'bg-emerald-100 text-emerald-800',
                 totalLevels: 12,
-                status: 'coming_soon'
+                status: 'coming_soon',
+                path: 'm1/g02-cell.html'
             },
             {
                 id: 'body-systems-m2',
+                code: 'M2-02',
                 grade: 'ม.2',
                 subject: 'ร่างกายมนุษย์',
                 title: 'ระบบหมุนเวียนเลือดและระบบหายใจ',
@@ -621,10 +656,12 @@
                 colorGradient: 'from-rose-600 to-pink-600',
                 badgeBg: 'bg-rose-100 text-rose-800',
                 totalLevels: 15,
-                status: 'coming_soon'
+                status: 'coming_soon',
+                path: 'm2/g02-body-systems.html'
             },
             {
                 id: 'electric-circuit-m3',
+                code: 'M3-02',
                 grade: 'ม.3',
                 subject: 'ไฟฟ้าและอิเล็กทรอนิกส์',
                 title: 'ต่อวงจรไฟฟ้าอย่างง่ายและกฎของโอห์ม',
@@ -633,7 +670,8 @@
                 colorGradient: 'from-violet-600 to-purple-600',
                 badgeBg: 'bg-violet-100 text-violet-800',
                 totalLevels: 15,
-                status: 'coming_soon'
+                status: 'coming_soon',
+                path: 'm3/g02-electric.html'
             }
         ];
 
@@ -1338,20 +1376,58 @@
             const grid = document.getElementById('gamesCatalogGrid');
             grid.innerHTML = '';
 
-            const filteredGames = GAME_CATALOG.filter(game =>
-                currentGradeFilter === 'all' || game.grade === currentGradeFilter
-            );
+            // อัปเดตตัวเลขจำนวนเกมที่สร้างเสร็จแล้วแยกตามระดับชั้น (เป้าหมายชั้นละ 30 เกม)
+            const readyM1 = GAME_CATALOG.filter(g => g.grade === 'ม.1' && g.status === 'ready').length;
+            const readyM2 = GAME_CATALOG.filter(g => g.grade === 'ม.2' && g.status === 'ready').length;
+            const readyM3 = GAME_CATALOG.filter(g => g.grade === 'ม.3' && g.status === 'ready').length;
+
+            document.getElementById('badgeCountM1').textContent = `(${readyM1}/${TARGET_PER_GRADE})`;
+            document.getElementById('badgeCountM2').textContent = `(${readyM2}/${TARGET_PER_GRADE})`;
+            document.getElementById('badgeCountM3').textContent = `(${readyM3}/${TARGET_PER_GRADE})`;
+
+            document.getElementById('statReadyM1').textContent = `${readyM1} / ${TARGET_PER_GRADE} เกม`;
+            document.getElementById('statReadyM2').textContent = `${readyM2} / ${TARGET_PER_GRADE} เกม`;
+            document.getElementById('statReadyM3').textContent = `${readyM3} / ${TARGET_PER_GRADE} เกม`;
+
+            const searchInput = document.getElementById('hubSearchInput');
+            const keyword = searchInput ? searchInput.value.trim().toLowerCase() : '';
+
+            const filteredGames = GAME_CATALOG.filter(game => {
+                const matchGrade = currentGradeFilter === 'all' || game.grade === currentGradeFilter;
+                const matchKeyword = !keyword ||
+                    game.title.toLowerCase().includes(keyword) ||
+                    game.subject.toLowerCase().includes(keyword) ||
+                    (game.code && game.code.toLowerCase().includes(keyword));
+                return matchGrade && matchKeyword;
+            });
 
             const totalStarsEarned = completedLevels.size + forceCompletedLevels.size;
             document.getElementById('hubGameCount').textContent = `แสดง ${filteredGames.length} รายการ`;
             document.getElementById('hubTotalStars').textContent = `${totalStarsEarned} ดาว`;
 
+            if (filteredGames.length === 0) {
+                grid.innerHTML = `
+                    <div class="col-span-full bg-white rounded-3xl p-8 text-center border border-slate-200">
+                        <div class="text-3xl mb-2">🔎</div>
+                        <div class="font-prompt font-bold text-slate-700">ไม่พบเกมที่ค้นหา</div>
+                        <p class="text-xs text-slate-500 mt-1">ลองเปลี่ยนคำค้นหา หรือกดเลือกหมวดหมู่ระดับชั้นด้านบน</p>
+                    </div>
+                `;
+                return;
+            }
+
             filteredGames.forEach(game => {
                 const isReady = game.status === 'ready';
                 let solvedCount = 0;
                 if (game.id === 'chem-balancing-m3') solvedCount = completedLevels.size;
-                if (game.id === 'force-vectors-m2') solvedCount = forceCompletedLevels.size;
-                const progressPct = Math.round((solvedCount / game.totalLevels) * 100);
+                else if (game.id === 'force-vectors-m2') solvedCount = forceCompletedLevels.size;
+                else {
+                    try {
+                        const extSaved = JSON.parse(localStorage.getItem(`sci_game_${game.id}`) || '[]');
+                        if (Array.isArray(extSaved)) solvedCount = extSaved.length;
+                    } catch (e) {}
+                }
+                const progressPct = Math.min(100, Math.round((solvedCount / game.totalLevels) * 100));
 
                 const card = document.createElement('div');
                 card.className = `bg-white rounded-3xl p-4 sm:p-5 border ${isReady ? 'border-slate-200 shadow-sm hover:shadow-md' : 'border-slate-200/80 opacity-85'} flex flex-col justify-between transition-all`;
@@ -1363,6 +1439,7 @@
                                 ${game.icon}
                             </div>
                             <div class="flex items-center gap-1.5 flex-wrap justify-end">
+                                ${game.code ? `<span class="font-prompt font-bold text-[11px] px-2 py-0.5 rounded-md bg-slate-800 text-white">${game.code}</span>` : ''}
                                 <span class="font-prompt font-bold text-xs px-2.5 py-0.5 rounded-full ${game.badgeBg}">
                                     ชั้น ${game.grade}
                                 </span>
@@ -1394,8 +1471,8 @@
                             </button>
                         ` : `
                             <div class="flex items-center justify-between text-xs text-slate-400 mb-2.5">
-                                <span>เตรียมไว้ ${game.totalLevels} ด่าน</span>
-                                <span class="bg-amber-100 text-amber-800 font-prompt font-semibold px-2 py-0.5 rounded-full text-[11px]">รอเพิ่มโจทย์</span>
+                                <span>ไฟล์: <code class="text-[11px] text-slate-500">${game.path || '-'}</code></span>
+                                <span class="bg-amber-100 text-amber-800 font-prompt font-semibold px-2 py-0.5 rounded-full text-[11px]">รอสร้างไฟล์</span>
                             </div>
                             <button onclick="openComingSoon('${game.id}')" class="btn-tactile w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-prompt font-semibold py-2.5 px-4 rounded-xl text-sm border border-slate-300">
                                 + เพิ่มเนื้อหาเกมนี้
@@ -1408,6 +1485,15 @@
         }
 
         function openGame(gameId) {
+            const game = GAME_CATALOG.find(g => g.id === gameId);
+            if (!game) return;
+
+            // หากเกมนี้แยกไฟล์อยู่ในโฟลเดอร์ย่อย (m1/, m2/, m3/) ให้เปิดหน้านั้นทันที
+            if (game.path) {
+                window.location.href = game.path;
+                return;
+            }
+
             document.getElementById('hubView').classList.add('hidden');
             document.getElementById('gameChemView').classList.add('hidden');
             document.getElementById('gameForceView').classList.add('hidden');
