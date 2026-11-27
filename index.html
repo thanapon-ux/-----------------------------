@@ -1,0 +1,2362 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ศูนย์รวมเกมวิทยาศาสตร์ - เรียนรู้ผ่านการเล่น (ม.1 - ม.3)</title>
+    <!-- โหลด Tailwind CSS และ Google Fonts (Sarabun / Prompt) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700&family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Sarabun', sans-serif;
+            background-color: #f0f9ff;
+            color: #0f172a;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+        h1, h2, h3, .font-prompt {
+            font-family: 'Prompt', sans-serif;
+        }
+        .chem-formula {
+            font-family: 'Prompt', sans-serif;
+            letter-spacing: 0.5px;
+        }
+        /* แอนิเมชันเมื่อเพิ่มโมเลกุล */
+        @keyframes popIn {
+            0% { transform: scale(0.5); opacity: 0; }
+            70% { transform: scale(1.1); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .molecule-cluster {
+            animation: popIn 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        /* ซ่อน Scrollbar แต่ยังเลื่อนได้ */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        /* สไตล์ปุ่มกดแบบนูนมีมิติสำหรับมือถือ */
+        .btn-tactile {
+            transition: transform 0.1s ease, box-shadow 0.1s ease;
+        }
+        .btn-tactile:active {
+            transform: translateY(2px);
+        }
+        /* เอฟเฟกต์เปิดหน้าต่าง Modal */
+        @keyframes floatUp {
+            0% { transform: translateY(20px) scale(0.85); opacity: 0; }
+            100% { transform: translateY(0) scale(1); opacity: 1; }
+        }
+        .modal-enter {
+            animation: floatUp 0.3s ease-out forwards;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <!-- ===================================================================== -->
+    <!-- มุมมองที่ 1 : หน้าศูนย์รวมเกมหลัก (GAME HUB LOBBY)                      -->
+    <!-- ===================================================================== -->
+    <div id="hubView" class="flex-1 flex flex-col pb-12">
+        <!-- แถบหัวเรื่องของศูนย์รวมเกม -->
+        <header class="bg-gradient-to-br from-indigo-700 via-blue-700 to-cyan-600 text-white shadow-lg">
+            <div class="max-w-4xl mx-auto px-4 py-6 sm:py-8">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div class="flex items-center gap-3.5">
+                        <div class="bg-white/20 backdrop-blur-xs p-3 rounded-2xl border border-white/30 shadow-inner">
+                            <span class="text-3xl sm:text-4xl">🔬</span>
+                        </div>
+                        <div>
+                            <div class="inline-block bg-amber-300 text-indigo-950 font-prompt font-bold text-xs px-2.5 py-0.5 rounded-full mb-1">
+                                ห้องเรียนวิทยาศาสตร์ยุคใหม่
+                            </div>
+                            <h1 class="text-xl sm:text-3xl font-bold leading-tight">ศูนย์รวมเกมวิทยาศาสตร์</h1>
+                            <p class="text-xs sm:text-sm text-blue-100 mt-0.5">เลือกหมวดหมู่ตามระดับชั้น แล้วกดเข้าเล่นได้ทันที</p>
+                        </div>
+                    </div>
+
+                    <!-- กล่องสรุปความคืบหน้ารวมทุกเกม -->
+                    <div class="bg-white/15 backdrop-blur-xs border border-white/25 rounded-2xl px-4 py-2.5 flex items-center gap-3 self-start sm:self-auto">
+                        <div class="text-2xl">🏆</div>
+                        <div>
+                            <div class="text-[11px] text-blue-100 font-medium">ความสำเร็จสะสม</div>
+                            <div id="hubTotalStars" class="font-prompt font-bold text-base sm:text-lg text-yellow-300">0 ดาว</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- แถบเลือกหมวดหมู่ตามระดับชั้น (Grade Level Tabs) -->
+                <div class="mt-6 flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
+                    <button onclick="setGradeFilter('all')" data-grade="all" class="grade-tab-btn btn-tactile flex-shrink-0 font-prompt font-bold text-sm px-4 py-2 rounded-xl bg-white text-indigo-900 shadow-md">
+                        ทั้งหมด
+                    </button>
+                    <button onclick="setGradeFilter('ม.1')" data-grade="ม.1" class="grade-tab-btn btn-tactile flex-shrink-0 font-prompt font-semibold text-sm px-4 py-2 rounded-xl bg-white/15 hover:bg-white/25 text-white border border-white/20">
+                        ชั้น ม.1
+                    </button>
+                    <button onclick="setGradeFilter('ม.2')" data-grade="ม.2" class="grade-tab-btn btn-tactile flex-shrink-0 font-prompt font-semibold text-sm px-4 py-2 rounded-xl bg-white/15 hover:bg-white/25 text-white border border-white/20">
+                        ชั้น ม.2
+                    </button>
+                    <button onclick="setGradeFilter('ม.3')" data-grade="ม.3" class="grade-tab-btn btn-tactile flex-shrink-0 font-prompt font-semibold text-sm px-4 py-2 rounded-xl bg-white/15 hover:bg-white/25 text-white border border-white/20">
+                        ชั้น ม.3
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- พื้นที่แสดงรายการการ์ดเกมแต่ละเรื่อง -->
+        <main class="flex-1 max-w-4xl w-full mx-auto px-4 pt-6">
+            <div class="flex items-center justify-between mb-4">
+                <h2 id="hubSectionTitle" class="font-prompt font-bold text-slate-800 text-lg sm:text-xl">
+                    รายการเกมทั้งหมด
+                </h2>
+                <span id="hubGameCount" class="text-xs font-semibold text-slate-500 bg-slate-200/70 px-2.5 py-1 rounded-full">
+                    แสดง 6 รายการ
+                </span>
+            </div>
+
+            <!-- ตารางการ์ดเกม (Grid) -->
+            <div id="gamesCatalogGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <!-- การ์ดเกมจะถูกสร้างด้วย JavaScript จาก GAME_CATALOG -->
+            </div>
+
+            <!-- กล่องคำแนะนำสำหรับครูในการเพิ่มเกมใหม่ -->
+            <div class="mt-8 bg-white rounded-2xl p-4 border border-dashed border-indigo-300 flex items-start gap-3 shadow-2xs">
+                <div class="text-2xl">💡</div>
+                <div class="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                    <strong class="font-prompt text-indigo-900 block mb-0.5">พื้นที่พร้อมขยายสำหรับห้องเรียนของคุณครู</strong>
+                    คุณครูสามารถบอกหัวข้อและระดับชั้นของเกมถัดไปที่ต้องการสร้างได้เลย (เช่น เกมแยกสาร ม.1, เกมระบบร่างกาย ม.2 หรือเกมวงจรไฟฟ้า ม.3) ระบบจะเพิ่มเกมใหม่ลงในหมวดหมู่ของชั้นนั้นให้อัตโนมัติค่ะ
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- มุมมองที่ 2 : เกมดุลสมการเคมี ม.3 (GAME 1 : CHEM BALANCING)            -->
+    <!-- ===================================================================== -->
+    <div id="gameChemView" class="hidden flex-1 flex flex-col pb-24">
+        <!-- แถบหัวเรื่อง -->
+        <header class="bg-gradient-to-r from-teal-600 to-cyan-600 text-white shadow-md sticky top-0 z-30">
+            <div class="max-w-3xl mx-auto px-3 py-2.5 flex items-center justify-between gap-2">
+                <div class="flex items-center gap-2">
+                    <!-- ปุ่มกลับหน้าศูนย์รวมเกม -->
+                    <button onclick="backToHub()" class="btn-tactile flex items-center gap-1 bg-white/20 hover:bg-white/30 text-white font-prompt font-semibold text-xs sm:text-sm px-2.5 py-1.5 rounded-xl border border-white/30">
+                        <span>←</span> <span>หน้าหลัก</span>
+                    </button>
+                    <div class="border-l border-teal-400/40 pl-2">
+                        <div class="flex items-center gap-1.5">
+                            <span class="bg-yellow-300 text-teal-950 font-prompt font-bold text-[10px] px-1.5 py-0.2 rounded">ม.3</span>
+                            <h1 class="text-sm sm:text-base font-bold leading-tight">ดุลสมการเคมี</h1>
+                        </div>
+                        <p class="text-[11px] text-teal-100 hidden sm:block">เติมเลขหน้าสูตร แล้วดูภาพอะตอม</p>
+                    </div>
+                </div>
+
+                <!-- แสดงคะแนนและดาวสะสม -->
+                <div class="flex items-center gap-1.5 bg-teal-800/40 px-3 py-1.5 rounded-full border border-teal-400/30">
+                    <span class="text-yellow-300 text-sm">★</span>
+                    <span id="scoreDisplay" class="font-prompt font-bold text-xs sm:text-sm">0 / 25</span>
+                </div>
+            </div>
+
+            <!-- แถบกรองระดับความยาก & ปุ่มสุ่มโจทย์ -->
+            <div class="bg-teal-800/50 border-t border-teal-500/30">
+                <div class="max-w-3xl mx-auto px-3 py-1.5 flex items-center justify-between gap-2 overflow-x-auto no-scrollbar">
+                    <div id="filterTabs" class="flex items-center gap-1 flex-shrink-0">
+                        <button onclick="setDifficultyFilter('all')" data-filter="all" class="filter-btn font-prompt text-xs font-bold px-2.5 py-1 rounded-lg bg-white text-teal-900 shadow-xs">ทั้งหมด (25)</button>
+                        <button onclick="setDifficultyFilter('ระดับง่าย')" data-filter="ระดับง่าย" class="filter-btn font-prompt text-xs font-semibold px-2.5 py-1 rounded-lg bg-teal-900/40 text-teal-100 hover:bg-teal-700">ง่าย</button>
+                        <button onclick="setDifficultyFilter('ระดับปานกลาง')" data-filter="ระดับปานกลาง" class="filter-btn font-prompt text-xs font-semibold px-2.5 py-1 rounded-lg bg-teal-900/40 text-teal-100 hover:bg-teal-700">ปานกลาง</button>
+                        <button onclick="setDifficultyFilter('ระดับท้าทาย')" data-filter="ระดับท้าทาย" class="filter-btn font-prompt text-xs font-semibold px-2.5 py-1 rounded-lg bg-teal-900/40 text-teal-100 hover:bg-teal-700">ท้าทาย</button>
+                    </div>
+                    <button onclick="pickRandomLevel()" class="btn-tactile flex-shrink-0 flex items-center gap-1 bg-amber-300 hover:bg-amber-400 text-teal-950 font-prompt font-bold text-xs px-2.5 py-1 rounded-lg shadow-xs">
+                        <span>🎲</span> สุ่มโจทย์
+                    </button>
+                </div>
+            </div>
+
+            <!-- แถบเลือกด่าน 1 - 25 -->
+            <div class="bg-teal-700/60 border-t border-teal-500/30">
+                <div id="levelSelector" class="max-w-3xl mx-auto px-3 py-2 flex items-center gap-1.5 overflow-x-auto no-scrollbar">
+                    <!-- ปุ่มด่านจะถูกสร้างด้วย JavaScript -->
+                </div>
+            </div>
+        </header>
+
+        <!-- พื้นที่เนื้อหาหลักของเกมดุลสมการ -->
+        <main class="flex-1 max-w-3xl w-full mx-auto px-3 pt-3 space-y-3">
+            <!-- แถบข้อมูลด่านปัจจุบัน + ปุ่มคำใบ้ และ รีเซ็ต -->
+            <div class="bg-white rounded-2xl p-3 shadow-sm border border-slate-200 flex flex-wrap items-center justify-between gap-2">
+                <div>
+                    <div class="flex items-center gap-2">
+                        <span id="levelBadge" class="bg-teal-100 text-teal-800 font-prompt font-bold text-xs px-2.5 py-0.5 rounded-full">ด่านที่ 1/25</span>
+                        <span id="difficultyBadge" class="bg-emerald-100 text-emerald-700 font-semibold text-xs px-2 py-0.5 rounded-full">ระดับง่าย</span>
+                    </div>
+                    <h2 id="reactionTitle" class="text-base sm:text-lg font-bold text-slate-800 mt-1">การเผาไหม้ลวดแมกนีเซียม</h2>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <button id="hintBtn" onclick="toggleHint()" class="btn-tactile flex items-center gap-1.5 bg-amber-100 hover:bg-amber-200 text-amber-900 font-prompt font-semibold text-xs sm:text-sm px-3 py-2 rounded-xl border border-amber-300 shadow-sm">
+                        <span>💡</span> คำใบ้
+                    </button>
+                    <button onclick="resetCurrentLevel()" class="btn-tactile flex items-center gap-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-prompt font-semibold text-xs sm:text-sm px-3 py-2 rounded-xl border border-slate-300 shadow-sm">
+                        <span>↺</span> รีเซ็ต
+                    </button>
+                </div>
+            </div>
+
+            <!-- กล่องคำใบ้ -->
+            <div id="hintBox" class="hidden bg-amber-50 border-l-4 border-amber-500 rounded-r-xl p-3 text-sm text-amber-950 shadow-sm">
+                <div class="font-bold font-prompt text-amber-800 mb-0.5">💡 คำแนะนำในการเริ่มดุล:</div>
+                <p id="hintText" class="leading-relaxed"></p>
+            </div>
+
+            <!-- กล่องแจ้งเตือนพิเศษ -->
+            <div id="statusBanner" class="hidden rounded-2xl p-3 text-sm font-semibold flex items-center gap-2.5 shadow-sm border">
+                <span id="statusIcon" class="text-xl"></span>
+                <span id="statusMessage"></span>
+            </div>
+
+            <!-- ส่วนที่ 1: กระดานสมการเคมี & โมเลกุลจำลอง -->
+            <section class="bg-white rounded-2xl p-3 sm:p-4 shadow-sm border border-slate-200">
+                <div class="flex items-center justify-between text-xs font-semibold text-slate-500 mb-2 pb-1.5 border-b border-slate-100">
+                    <span>กติกา: กดปุ่ม <strong class="text-teal-700">+ / -</strong> หน้าสูตรเพื่อเพิ่มจำนวนชุดโมเลกุล</span>
+                    <span class="hidden sm:inline text-slate-400">ห้ามแก้ตัวเลขห้อย</span>
+                </div>
+
+                <div class="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+                    <!-- ฝั่งซ้าย: สารตั้งต้น -->
+                    <div class="flex-1 bg-sky-50/70 rounded-2xl p-2.5 border-2 border-sky-200">
+                        <div class="text-center mb-2">
+                            <span class="inline-block bg-sky-600 text-white font-prompt font-semibold text-xs px-3 py-0.5 rounded-full shadow-xs">
+                                ฝั่งซ้าย : สารตั้งต้น
+                            </span>
+                        </div>
+                        <div id="reactantsContainer" class="flex flex-wrap items-stretch justify-center gap-2"></div>
+                    </div>
+
+                    <!-- ลูกศรคั่นกลาง -->
+                    <div class="flex items-center justify-center py-0.5 md:px-1">
+                        <div class="bg-slate-800 text-white w-9 h-9 rounded-full flex items-center justify-center font-bold text-lg shadow-sm transform rotate-90 md:rotate-0">
+                            →
+                        </div>
+                    </div>
+
+                    <!-- ฝั่งขวา: ผลิตภัณฑ์ -->
+                    <div class="flex-1 bg-indigo-50/70 rounded-2xl p-2.5 border-2 border-indigo-200">
+                        <div class="text-center mb-2">
+                            <span class="inline-block bg-indigo-600 text-white font-prompt font-semibold text-xs px-3 py-0.5 rounded-full shadow-xs">
+                                ฝั่งขวา : ผลิตภัณฑ์
+                            </span>
+                        </div>
+                        <div id="productsContainer" class="flex flex-wrap items-stretch justify-center gap-2"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ส่วนที่ 2: ตารางเปรียบเทียบจำนวนอะตอมแบบเรียลไทม์ -->
+            <section class="bg-white rounded-2xl p-3 sm:p-4 shadow-sm border border-slate-200">
+                <div class="flex items-center justify-between mb-2.5">
+                    <h3 class="font-prompt font-bold text-slate-800 text-sm sm:text-base flex items-center gap-1.5">
+                        <span>⚖️</span> ตารางเปรียบเทียบจำนวนอะตอม (ซ้าย vs ขวา)
+                    </h3>
+                    <span id="overallBalanceTag" class="text-xs font-bold px-2.5 py-1 rounded-full bg-rose-100 text-rose-700">
+                        ยังไม่สมดุล
+                    </span>
+                </div>
+
+                <div id="atomTrackerList" class="space-y-2.5"></div>
+
+                <div id="atomLegend" class="mt-3 pt-2.5 border-t border-slate-100 flex flex-wrap items-center gap-2 text-xs text-slate-600"></div>
+            </section>
+        </main>
+
+        <!-- แถบควบคุมด้านล่าง -->
+        <footer class="fixed bottom-0 inset-x-0 bg-white/95 backdrop-blur-xs border-t border-slate-200 py-2.5 px-3 z-20">
+            <div class="max-w-3xl mx-auto flex items-center justify-between gap-3">
+                <button id="prevBtn" onclick="changeLevel(-1)" class="btn-tactile flex-1 bg-slate-100 hover:bg-slate-200 disabled:opacity-40 text-slate-800 font-prompt font-semibold py-2.5 px-4 rounded-xl text-sm border border-slate-300">
+                    ← ข้อก่อนหน้า
+                </button>
+                <button id="nextBtn" onclick="changeLevel(1)" class="btn-tactile flex-1 bg-teal-600 hover:bg-teal-700 disabled:opacity-40 text-white font-prompt font-semibold py-2.5 px-4 rounded-xl text-sm shadow-sm">
+                    ข้อถัดไป →
+                </button>
+            </div>
+        </footer>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- มุมมองที่ 3 : เกมเวกเตอร์ของแรง ม.2 (GAME 2 : FORCE VECTOR M2)         -->
+    <!-- ===================================================================== -->
+    <div id="gameForceView" class="hidden flex-1 flex flex-col pb-24">
+        <!-- แถบหัวเรื่องของเกมเวกเตอร์ของแรง -->
+        <header class="bg-gradient-to-r from-orange-600 to-amber-600 text-white shadow-md sticky top-0 z-30">
+            <div class="max-w-3xl mx-auto px-3 py-2.5 flex items-center justify-between gap-2">
+                <div class="flex items-center gap-2">
+                    <button onclick="backToHub()" class="btn-tactile flex items-center gap-1 bg-white/20 hover:bg-white/30 text-white font-prompt font-semibold text-xs sm:text-sm px-2.5 py-1.5 rounded-xl border border-white/30">
+                        <span>←</span> <span>หน้าหลัก</span>
+                    </button>
+                    <div class="border-l border-orange-300/40 pl-2">
+                        <div class="flex items-center gap-1.5">
+                            <span class="bg-yellow-300 text-orange-950 font-prompt font-bold text-[10px] px-1.5 py-0.2 rounded">ม.2</span>
+                            <h1 class="text-sm sm:text-base font-bold leading-tight">เวกเตอร์ของแรง (4 ทิศ)</h1>
+                        </div>
+                        <p class="text-[11px] text-orange-100 hidden sm:block">รวมแรงลัพธ์ตามทิศ เหนือ • ใต้ • ออก • ตก</p>
+                    </div>
+                </div>
+
+                <!-- คะแนนสะสมเกมเวกเตอร์ -->
+                <div class="flex items-center gap-1.5 bg-orange-900/40 px-3 py-1.5 rounded-full border border-orange-300/30">
+                    <span class="text-yellow-300 text-sm">★</span>
+                    <span id="forceScoreDisplay" class="font-prompt font-bold text-xs sm:text-sm">0 / 15</span>
+                </div>
+            </div>
+
+            <!-- แถบเลือกด่าน 1 - 15 -->
+            <div class="bg-orange-800/50 border-t border-orange-400/30">
+                <div id="forceLevelSelector" class="max-w-3xl mx-auto px-3 py-2 flex items-center gap-1.5 overflow-x-auto no-scrollbar">
+                    <!-- ปุ่มด่านสร้างด้วย JavaScript -->
+                </div>
+            </div>
+        </header>
+
+        <!-- พื้นที่เนื้อหาหลักเกมเวกเตอร์ของแรง -->
+        <main class="flex-1 max-w-3xl w-full mx-auto px-3 pt-3 space-y-3">
+            <!-- กล่องข้อมูลด่าน + คำใบ้ -->
+            <div class="bg-white rounded-2xl p-3 shadow-sm border border-slate-200 flex flex-wrap items-center justify-between gap-2">
+                <div>
+                    <div class="flex items-center gap-2">
+                        <span id="forceLevelBadge" class="bg-orange-100 text-orange-800 font-prompt font-bold text-xs px-2.5 py-0.5 rounded-full">ด่านที่ 1/15</span>
+                        <span id="forceDiffBadge" class="bg-emerald-100 text-emerald-700 font-semibold text-xs px-2 py-0.5 rounded-full">ทิศทางเดียวกัน</span>
+                    </div>
+                    <h2 id="forceTitle" class="text-base sm:text-lg font-bold text-slate-800 mt-1">ช่วยกันดันกล่องไปทางทิศตะวันออก</h2>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <button onclick="toggleForceHint()" class="btn-tactile flex items-center gap-1.5 bg-amber-100 hover:bg-amber-200 text-amber-900 font-prompt font-semibold text-xs sm:text-sm px-3 py-2 rounded-xl border border-amber-300 shadow-sm">
+                        <span>💡</span> คำใบ้
+                    </button>
+                    <button onclick="resetForceLevel()" class="btn-tactile flex items-center gap-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-prompt font-semibold text-xs sm:text-sm px-3 py-2 rounded-xl border border-slate-300 shadow-sm">
+                        <span>↺</span> ล้างค่า
+                    </button>
+                </div>
+            </div>
+
+            <!-- กล่องคำใบ้ -->
+            <div id="forceHintBox" class="hidden bg-amber-50 border-l-4 border-amber-500 rounded-r-xl p-3 text-sm text-amber-950 shadow-sm">
+                <div class="font-bold font-prompt text-amber-800 mb-0.5">💡 แนวคิดการบวกลบเวกเตอร์ของแรง:</div>
+                <p id="forceHintText" class="leading-relaxed"></p>
+            </div>
+
+            <!-- กล่องแจ้งเตือนเมื่อตอบผิด -->
+            <div id="forceFeedbackBanner" class="hidden rounded-2xl p-3 text-sm font-semibold flex items-center gap-2.5 shadow-sm border bg-rose-50 border-rose-300 text-rose-900">
+                <span class="text-xl">🤔</span>
+                <span id="forceFeedbackMsg"></span>
+            </div>
+
+            <!-- ส่วนที่ 1 : กระดานภาพเข็มทิศและลูกศรเวกเตอร์ของแรง (SVG Interactive Canvas) -->
+            <section class="bg-white rounded-2xl p-3 sm:p-4 shadow-sm border border-slate-200">
+                <div class="flex items-center justify-between text-xs font-semibold text-slate-500 mb-2 pb-1.5 border-b border-slate-100">
+                    <span>สังเกตลูกศรแรงที่กระทำต่อวัตถุ (1 ช่องตาราง = 1 นิวตัน)</span>
+                    <span class="text-orange-700 font-prompt">N = นิวตัน</span>
+                </div>
+
+                <div class="flex flex-col md:flex-row items-center gap-4">
+                    <!-- ภาพเวกเตอร์บนเข็มทิศ 4 ทิศ -->
+                    <div class="w-full max-w-[330px] aspect-square mx-auto bg-slate-50 rounded-2xl border-2 border-slate-200 p-2 relative flex items-center justify-center">
+                        <svg id="forceVectorSvg" viewBox="0 0 320 320" class="w-full h-full overflow-visible">
+                            <!-- เส้นตารางและลูกศรเวกเตอร์จะถูกวาดด้วย JavaScript -->
+                        </svg>
+                    </div>
+
+                    <!-- รายการแรงย่อยแต่ละตัวที่กระทำ -->
+                    <div class="flex-1 w-full space-y-2">
+                        <div class="font-prompt font-bold text-xs sm:text-sm text-slate-700 mb-1">
+                            รายการแรงที่กระทำต่อวัตถุ:
+                        </div>
+                        <div id="forceListContainer" class="space-y-2">
+                            <!-- การ์ดแสดงแรงย่อยแต่ละตัว -->
+                        </div>
+
+                        <!-- กล่องสรุปหลักการสั้นๆ -->
+                        <div class="mt-3 bg-orange-50/80 border border-orange-200 rounded-xl p-2.5 text-xs text-slate-700 space-y-1">
+                            <div class="font-prompt font-bold text-orange-900">📌 หลักจำง่ายๆ:</div>
+                            <div>• แรงไป <strong>ทิศเดียวกัน</strong> → นำขนาดมา <strong>บวกกัน (+)</strong></div>
+                            <div>• แรงไป <strong>ทิศตรงข้ามกัน</strong> → นำขนาดมา <strong>ลบกัน (−)</strong> ทิศตามแรงที่มากกว่า</div>
+                            <div>• ถ้าแรงซ้าย-ขวา หรือ บน-ล่าง เท่ากันพอดี → แรงลัพธ์ = <strong>0 N (หยุดนิ่ง)</strong></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ส่วนที่ 2 : แผงควบคุมให้นักเรียนระบุคำตอบ "ขนาดแรงลัพธ์" และ "ทิศทาง" -->
+            <section class="bg-white rounded-2xl p-3 sm:p-4 shadow-sm border-2 border-orange-200">
+                <h3 class="font-prompt font-bold text-slate-800 text-sm sm:text-base mb-3 flex items-center gap-1.5">
+                    <span>🎯</span> ระบุคำตอบของ "แรงลัพธ์" ที่เกิดขึ้น
+                </h3>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <!-- ช่องที่ 1 : ปรับขนาดของแรงลัพธ์ (นิวตัน) -->
+                    <div class="bg-slate-50 rounded-2xl p-3 border border-slate-200">
+                        <div class="text-xs font-prompt font-semibold text-slate-600 text-center mb-2">
+                            1. ขนาดของแรงลัพธ์ (นิวตัน)
+                        </div>
+                        <div class="flex items-center justify-center gap-2">
+                            <button onclick="adjustForceAnswer(-5)" class="btn-tactile w-10 h-11 rounded-xl bg-rose-100 hover:bg-rose-200 text-rose-700 font-prompt font-bold text-sm border border-rose-300">−5</button>
+                            <button onclick="adjustForceAnswer(-1)" class="btn-tactile w-10 h-11 rounded-xl bg-rose-100 hover:bg-rose-200 text-rose-700 font-prompt font-bold text-lg border border-rose-300">−1</button>
+
+                            <div class="min-w-[74px] h-12 px-2 rounded-xl bg-white border-2 border-orange-400 flex flex-col items-center justify-center shadow-2xs">
+                                <span id="forceMagValue" class="font-prompt font-bold text-xl text-orange-700 leading-none">0</span>
+                                <span class="text-[10px] text-slate-400 font-semibold">นิวตัน (N)</span>
+                            </div>
+
+                            <button onclick="adjustForceAnswer(1)" class="btn-tactile w-10 h-11 rounded-xl bg-emerald-100 hover:bg-emerald-200 text-emerald-700 font-prompt font-bold text-lg border border-emerald-300">+1</button>
+                            <button onclick="adjustForceAnswer(5)" class="btn-tactile w-10 h-11 rounded-xl bg-emerald-100 hover:bg-emerald-200 text-emerald-700 font-prompt font-bold text-sm border border-emerald-300">+5</button>
+                        </div>
+                    </div>
+
+                    <!-- ช่องที่ 2 : เลือกทิศทางของแรงลัพธ์ (เหนือ / ใต้ / ออก / ตก / ไม่มีทิศ) -->
+                    <div class="bg-slate-50 rounded-2xl p-3 border border-slate-200">
+                        <div class="text-xs font-prompt font-semibold text-slate-600 text-center mb-2">
+                            2. ทิศทางของแรงลัพธ์ (8 ทิศ)
+                        </div>
+                        <div class="grid grid-cols-3 gap-1.5 max-w-[255px] mx-auto">
+                            <button onclick="selectForceDirection('NW')" data-dir="NW" class="dir-choice-btn btn-tactile py-2 px-1 rounded-xl bg-white border border-slate-300 font-prompt font-bold text-[11px] text-slate-700 hover:bg-orange-50">
+                                ↖ ตก-เหนือ
+                            </button>
+                            <button onclick="selectForceDirection('N')" data-dir="N" class="dir-choice-btn btn-tactile py-2 px-1 rounded-xl bg-white border border-slate-300 font-prompt font-bold text-xs text-slate-700 hover:bg-orange-50">
+                                ↑ เหนือ
+                            </button>
+                            <button onclick="selectForceDirection('NE')" data-dir="NE" class="dir-choice-btn btn-tactile py-2 px-1 rounded-xl bg-white border border-slate-300 font-prompt font-bold text-[11px] text-slate-700 hover:bg-orange-50">
+                                ↗ ออก-เหนือ
+                            </button>
+
+                            <button onclick="selectForceDirection('W')" data-dir="W" class="dir-choice-btn btn-tactile py-2 px-1 rounded-xl bg-white border border-slate-300 font-prompt font-bold text-xs text-slate-700 hover:bg-orange-50">
+                                ← ตก
+                            </button>
+                            <button onclick="selectForceDirection('NONE')" data-dir="NONE" class="dir-choice-btn btn-tactile py-2 px-1 rounded-xl bg-white border border-slate-300 font-prompt font-bold text-[11px] text-slate-600 hover:bg-orange-50">
+                                ⏺ หยุดนิ่ง
+                            </button>
+                            <button onclick="selectForceDirection('E')" data-dir="E" class="dir-choice-btn btn-tactile py-2 px-1 rounded-xl bg-white border border-slate-300 font-prompt font-bold text-xs text-slate-700 hover:bg-orange-50">
+                                ออก →
+                            </button>
+
+                            <button onclick="selectForceDirection('SW')" data-dir="SW" class="dir-choice-btn btn-tactile py-2 px-1 rounded-xl bg-white border border-slate-300 font-prompt font-bold text-[11px] text-slate-700 hover:bg-orange-50">
+                                ↙ ตก-ใต้
+                            </button>
+                            <button onclick="selectForceDirection('S')" data-dir="S" class="dir-choice-btn btn-tactile py-2 px-1 rounded-xl bg-white border border-slate-300 font-prompt font-bold text-xs text-slate-700 hover:bg-orange-50">
+                                ↓ ใต้
+                            </button>
+                            <button onclick="selectForceDirection('SE')" data-dir="SE" class="dir-choice-btn btn-tactile py-2 px-1 rounded-xl bg-white border border-slate-300 font-prompt font-bold text-[11px] text-slate-700 hover:bg-orange-50">
+                                ↘ ออก-ใต้
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ปุ่มตรวจคำตอบ -->
+                <button onclick="checkForceAnswer()" class="btn-tactile mt-4 w-full bg-gradient-to-r from-orange-600 to-amber-600 hover:opacity-95 text-white font-prompt font-bold py-3 px-4 rounded-xl text-base shadow-md flex items-center justify-center gap-2">
+                    <span>✓</span> <span>ตรวจคำตอบแรงลัพธ์</span>
+                </button>
+            </section>
+        </main>
+
+        <!-- แถบควบคุมเปลี่ยนด่านด้านล่าง -->
+        <footer class="fixed bottom-0 inset-x-0 bg-white/95 backdrop-blur-xs border-t border-slate-200 py-2.5 px-3 z-20">
+            <div class="max-w-3xl mx-auto flex items-center justify-between gap-3">
+                <button id="forcePrevBtn" onclick="changeForceLevel(-1)" class="btn-tactile flex-1 bg-slate-100 hover:bg-slate-200 disabled:opacity-40 text-slate-800 font-prompt font-semibold py-2.5 px-4 rounded-xl text-sm border border-slate-300">
+                    ← ข้อก่อนหน้า
+                </button>
+                <button id="forceNextBtn" onclick="changeForceLevel(1)" class="btn-tactile flex-1 bg-orange-600 hover:bg-orange-700 disabled:opacity-40 text-white font-prompt font-semibold py-2.5 px-4 rounded-xl text-sm shadow-sm">
+                    ข้อถัดไป →
+                </button>
+            </div>
+        </footer>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- หน้าต่างแสดงความยินดีเมื่อดุลสมการถูกต้อง (SUCCESS MODAL)               -->
+    <!-- ===================================================================== -->
+    <div id="successModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+        <div class="modal-enter bg-white rounded-3xl max-w-sm w-full p-6 text-center shadow-2xl border-2 border-emerald-400">
+            <div class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-3 text-4xl shadow-inner">
+                🎉
+            </div>
+            <div class="flex justify-center gap-1 text-3xl text-yellow-400 mb-2">
+                <span>★</span><span>★</span><span>★</span>
+            </div>
+            <h3 class="font-prompt font-bold text-xl text-slate-800">ยอดเยี่ยม! สมการสมดุลแล้ว</h3>
+            <p class="text-sm text-slate-600 mt-1">จำนวนอะตอมฝั่งซ้ายและฝั่งขวาเท่ากันครบทุกธาตุ</p>
+            
+            <div id="modalBalancedEquation" class="my-4 bg-emerald-50 border border-emerald-200 rounded-2xl p-3 font-prompt font-bold text-base sm:text-lg text-emerald-900"></div>
+
+            <div class="flex flex-col gap-2 mt-4">
+                <button id="modalNextBtn" onclick="goNextFromModal()" class="btn-tactile w-full bg-emerald-600 hover:bg-emerald-700 text-white font-prompt font-bold py-3 px-4 rounded-xl text-base shadow-md">
+                    ไปด่านถัดไป →
+                </button>
+                <button onclick="closeSuccessModal()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-prompt font-semibold py-2 px-4 rounded-xl text-sm">
+                    ดูภาพโมเลกุลต่อ
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- หน้าต่างแสดงความยินดีสำหรับเกมเวกเตอร์ของแรง ม.2 (FORCE SUCCESS MODAL) -->
+    <!-- ===================================================================== -->
+    <div id="forceSuccessModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+        <div class="modal-enter bg-white rounded-3xl max-w-sm w-full p-6 text-center shadow-2xl border-2 border-orange-400">
+            <div class="w-16 h-16 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center mx-auto mb-3 text-4xl shadow-inner">
+                🧭
+            </div>
+            <div class="flex justify-center gap-1 text-3xl text-yellow-400 mb-2">
+                <span>★</span><span>★</span><span>★</span>
+            </div>
+            <h3 class="font-prompt font-bold text-xl text-slate-800">ถูกต้อง! หาแรงลัพธ์แม่นยำมาก</h3>
+            <p id="forceModalDesc" class="text-sm text-slate-600 mt-1">สรุปการรวมเวกเตอร์ของแรง</p>
+            
+            <!-- แผนภาพเฉลยลูกศรแรงลัพธ์ที่คำนวณได้จากโจทย์จริง -->
+            <div class="my-3 bg-slate-50 border border-slate-200 rounded-2xl p-2 flex flex-col items-center">
+                <span class="text-[11px] font-prompt font-semibold text-slate-600 mb-1">วิธีต่อเวกเตอร์แบบ "หางต่อหัว" (จุดเริ่มต้น → ปลายลูกศรสุดท้าย):</span>
+                <svg id="forceModalSvg" viewBox="0 0 320 320" class="w-56 h-56 overflow-visible"></svg>
+            </div>
+
+            <div id="forceModalSummary" class="mb-3 bg-orange-50 border border-orange-200 rounded-2xl p-2.5 font-prompt font-bold text-sm sm:text-base text-orange-950"></div>
+
+            <div class="flex flex-col gap-2 mt-4">
+                <button id="forceModalNextBtn" onclick="goNextFromForceModal()" class="btn-tactile w-full bg-orange-600 hover:bg-orange-700 text-white font-prompt font-bold py-3 px-4 rounded-xl text-base shadow-md">
+                    ไปด่านถัดไป →
+                </button>
+                <button onclick="closeForceSuccessModal()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-prompt font-semibold py-2 px-4 rounded-xl text-sm">
+                    ดูภาพเวกเตอร์ต่อ
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- หน้าต่างแจ้งเตือนกรณีเลือกเกมที่กำลังพัฒนา (COMING SOON MODAL)         -->
+    <!-- ===================================================================== -->
+    <div id="comingSoonModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+        <div class="modal-enter bg-white rounded-3xl max-w-sm w-full p-6 text-center shadow-2xl border border-indigo-200">
+            <div id="csIcon" class="w-16 h-16 bg-indigo-100 rounded-2xl flex items-center justify-center mx-auto mb-3 text-4xl">
+                🧪
+            </div>
+            <span id="csGradeBadge" class="inline-block bg-indigo-100 text-indigo-800 font-prompt font-bold text-xs px-3 py-0.5 rounded-full mb-1">
+                ชั้น ม.1
+            </span>
+            <h3 id="csTitle" class="font-prompt font-bold text-lg text-slate-800">ชื่อเกม</h3>
+            <p class="text-sm text-slate-600 mt-2 leading-relaxed">
+                ช่องเกมนี้เตรียมไว้พร้อมแล้ว! หากคุณครูต้องการสร้างเกมเรื่องนี้เป็นเกมถัดไป สามารถพิมพ์บอกในแชทเพื่อให้สร้างระบบการเล่นใส่ในช่องนี้ได้ทันทีค่ะ
+            </p>
+            <button onclick="closeComingSoonModal()" class="btn-tactile mt-5 w-full bg-indigo-600 hover:bg-indigo-700 text-white font-prompt font-bold py-2.5 px-4 rounded-xl text-sm shadow-sm">
+                ตกลง, กลับหน้าศูนย์รวมเกม
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // =====================================================================
+        // 1. คลังเกมวิทยาศาสตร์ทั้งหมดแยกตามระดับชั้น (GAME CATALOG)
+        // =====================================================================
+        const GAME_CATALOG = [
+            {
+                id: 'chem-balancing-m3',
+                grade: 'ม.3',
+                subject: 'เคมีพื้นฐาน',
+                title: 'ดุลสมการเคมีผ่านภาพโมเลกุล',
+                description: 'ฝึกเติมตัวเลขหน้าสูตรเคมีและสังเกตจำนวนอะตอมซ้าย–ขวาแบบเรียลไทม์ ครบ 25 ด่าน',
+                icon: '⚗️',
+                colorGradient: 'from-teal-600 to-cyan-600',
+                badgeBg: 'bg-teal-100 text-teal-800',
+                totalLevels: 25,
+                status: 'ready'
+            },
+            {
+                id: 'force-vectors-m2',
+                grade: 'ม.2',
+                subject: 'แรงและการเคลื่อนที่',
+                title: 'เวกเตอร์ของแรง (เหนือ ใต้ ออก ตก)',
+                description: 'ฝึกบวกลบเวกเตอร์ของแรงจากแผนภาพเข็มทิศ 8 ทิศ พร้อมโจทย์แรงตั้งฉาก 17 ด่าน',
+                icon: '🧭',
+                colorGradient: 'from-orange-600 to-amber-600',
+                badgeBg: 'bg-orange-100 text-orange-800',
+                totalLevels: 17,
+                status: 'ready'
+            },
+            {
+                id: 'mixture-sep-m1',
+                grade: 'ม.1',
+                subject: 'สารรอบตัว',
+                title: 'แยกสารเนื้อเดียวและสารเนื้อผสม',
+                description: 'เลือกวิธีแยกสารให้เหมาะสมกับสมบัติของสารผสมในชีวิตประจำวัน',
+                icon: '🧪',
+                colorGradient: 'from-sky-600 to-blue-600',
+                badgeBg: 'bg-sky-100 text-sky-800',
+                totalLevels: 15,
+                status: 'coming_soon'
+            },
+            {
+                id: 'cell-structure-m1',
+                grade: 'ม.1',
+                subject: 'หน่วยพื้นฐานของสิ่งมีชีวิต',
+                title: 'สำรวจโครงสร้างเซลล์พืชและเซลล์สัตว์',
+                description: 'จับคู่หน้าที่ของออร์แกเนลล์และเปรียบเทียบความแตกต่างระหว่างเซลล์พืชกับเซลล์สัตว์',
+                icon: '🧬',
+                colorGradient: 'from-emerald-600 to-green-600',
+                badgeBg: 'bg-emerald-100 text-emerald-800',
+                totalLevels: 12,
+                status: 'coming_soon'
+            },
+            {
+                id: 'body-systems-m2',
+                grade: 'ม.2',
+                subject: 'ร่างกายมนุษย์',
+                title: 'ระบบหมุนเวียนเลือดและระบบหายใจ',
+                description: 'จำลองเส้นทางการไหลเวียนของเลือดผ่านหัวใจ 4 ห้องและการแลกเปลี่ยนแก๊สที่ถุงลมปอด',
+                icon: '🫀',
+                colorGradient: 'from-rose-600 to-pink-600',
+                badgeBg: 'bg-rose-100 text-rose-800',
+                totalLevels: 15,
+                status: 'coming_soon'
+            },
+            {
+                id: 'electric-circuit-m3',
+                grade: 'ม.3',
+                subject: 'ไฟฟ้าและอิเล็กทรอนิกส์',
+                title: 'ต่อวงจรไฟฟ้าอย่างง่ายและกฎของโอห์ม',
+                description: 'ทดลองต่อหลอดไฟแบบอนุกรมและขนาน พร้อมคำนวณกระแสไฟฟ้าและความต่างศักย์',
+                icon: '⚡',
+                colorGradient: 'from-violet-600 to-purple-600',
+                badgeBg: 'bg-violet-100 text-violet-800',
+                totalLevels: 15,
+                status: 'coming_soon'
+            }
+        ];
+
+        // =====================================================================
+        // 2. คลังโจทย์เกมเวกเตอร์ของแรง ม.2 (17 ด่าน : เหนือ ใต้ ออก ตก + แรงตั้งฉาก)
+        //    ทิศทาง: 'N','S','E','W','NE','NW','SE','SW','NONE'
+        // =====================================================================
+        const DIR_META = {
+            N:    { label: 'ทิศเหนือ', short: 'เหนือ', arrow: '↑', dx: 0, dy: -1 },
+            S:    { label: 'ทิศใต้', short: 'ใต้', arrow: '↓', dx: 0, dy: 1 },
+            E:    { label: 'ทิศตะวันออก', short: 'ออก', arrow: '→', dx: 1, dy: 0 },
+            W:    { label: 'ทิศตะวันตก', short: 'ตก', arrow: '←', dx: -1, dy: 0 },
+            NE:   { label: 'ทิศตะวันออกเฉียงเหนือ', short: 'ออก-เหนือ', arrow: '↗', dx: Math.SQRT1_2, dy: -Math.SQRT1_2 },
+            NW:   { label: 'ทิศตะวันตกเฉียงเหนือ', short: 'ตก-เหนือ', arrow: '↖', dx: -Math.SQRT1_2, dy: -Math.SQRT1_2 },
+            SE:   { label: 'ทิศตะวันออกเฉียงใต้', short: 'ออก-ใต้', arrow: '↘', dx: Math.SQRT1_2, dy: Math.SQRT1_2 },
+            SW:   { label: 'ทิศตะวันตกเฉียงใต้', short: 'ตก-ใต้', arrow: '↙', dx: -Math.SQRT1_2, dy: Math.SQRT1_2 },
+            NONE: { label: 'หยุดนิ่ง (ไม่มีทิศ)', short: 'หยุดนิ่ง', arrow: '⏺', dx: 0, dy: 0 }
+        };
+
+        const FORCE_LEVELS = [
+            // --- กลุ่มที่ 1 : แรงไปทิศเดียวกัน (บวกเวกเตอร์) ---
+            {
+                id: 1,
+                category: 'ทิศเดียวกัน (+)',
+                title: 'เพื่อน 2 คนช่วยกันผลักโต๊ะไปทางทิศตะวันออก',
+                hint: 'แรงทั้งสองมีลูกศรชี้ไปทาง "ทิศตะวันออก" เหมือนกัน ให้นำขนาดของแรงมาบวกกัน (4 + 3) และทิศทางยังคงไปทางทิศตะวันออก',
+                forces: [
+                    { name: 'แรง F₁ (คนที่ 1)', mag: 4, dir: 'E', color: '#2563eb' },
+                    { name: 'แรง F₂ (คนที่ 2)', mag: 3, dir: 'E', color: '#16a34a' }
+                ],
+                ansMag: 7,
+                ansDir: 'E'
+            },
+            {
+                id: 2,
+                category: 'ทิศเดียวกัน (+)',
+                title: 'ช่วยกันลากกระสอบข้าวไปทางทิศเหนือ',
+                hint: 'ลูกศรทั้งสองชี้ขึ้นด้านบน (ทิศเหนือ) เหมือนกัน นำขนาดแรงมาบวกกันได้เลย: 5 + 4 = 9 N ทิศเหนือ',
+                forces: [
+                    { name: 'แรง F₁', mag: 5, dir: 'N', color: '#2563eb' },
+                    { name: 'แรง F₂', mag: 4, dir: 'N', color: '#ea580c' }
+                ],
+                ansMag: 9,
+                ansDir: 'N'
+            },
+            {
+                id: 3,
+                category: 'ทิศเดียวกัน (+)',
+                title: 'เรือพายตามกระแสน้ำไปทางทิศใต้',
+                hint: 'แรงพายและกระแสน้ำช่วยดันไปทาง "ทิศใต้" ทั้งคู่ นำขนาดแรง 6 N มารวมกับ 2 N จะได้แรงลัพธ์ 8 N ทิศใต้',
+                forces: [
+                    { name: 'แรงพายเรือ (F₁)', mag: 6, dir: 'S', color: '#2563eb' },
+                    { name: 'แรงกระแสน้ำ (F₂)', mag: 2, dir: 'S', color: '#0891b2' }
+                ],
+                ansMag: 8,
+                ansDir: 'S'
+            },
+            {
+                id: 4,
+                category: 'ทิศเดียวกัน (+)',
+                title: 'ช่วยกันเข็นรถเข็น 3 แรงไปทางทิศตะวันตก',
+                hint: 'แรงทั้ง 3 ตัวชี้ไปทางซ้าย (ทิศตะวันตก) ทั้งหมด นำขนาดทั้งสามตัวมาบวกกัน: 3 + 4 + 3 = 10 N ทิศตะวันตก',
+                forces: [
+                    { name: 'แรง F₁', mag: 3, dir: 'W', color: '#2563eb' },
+                    { name: 'แรง F₂', mag: 4, dir: 'W', color: '#16a34a' },
+                    { name: 'แรง F₃', mag: 3, dir: 'W', color: '#9333ea' }
+                ],
+                ansMag: 10,
+                ansDir: 'W'
+            },
+
+            // --- กลุ่มที่ 2 : แรงทิศตรงข้ามกัน (ลบเวกเตอร์) ---
+            {
+                id: 5,
+                category: 'ทิศตรงข้าม (−)',
+                title: 'ชักเย่อแนวตะวันออก - ตะวันตก',
+                hint: 'แรง F₁ ดึงไปทางทิศตะวันออก 8 N ส่วน F₂ ดึงสวนทางไปทิศตะวันตก 3 N ทิศตรงข้ามกันให้นำมาลบกัน (8 − 3 = 5 N) และเคลื่อนที่ตามแรงที่มากกว่าคือทิศตะวันออก',
+                forces: [
+                    { name: 'แรง F₁', mag: 8, dir: 'E', color: '#2563eb' },
+                    { name: 'แรง F₂', mag: 3, dir: 'W', color: '#dc2626' }
+                ],
+                ansMag: 5,
+                ansDir: 'E'
+            },
+            {
+                id: 6,
+                category: 'ทิศตรงข้าม (−)',
+                title: 'ดึงกล่องสวนทางกันแนวเหนือ - ใต้',
+                hint: 'ทิศเหนือมีแรง 4 N แต่ทิศใต้มีแรงมากกว่าคือ 9 N นำตัวมากลบตัวน้อย (9 − 4 = 5 N) ทิศทางตามแรง 9 N คือทิศใต้',
+                forces: [
+                    { name: 'แรง F₁', mag: 4, dir: 'N', color: '#2563eb' },
+                    { name: 'แรง F₂', mag: 9, dir: 'S', color: '#dc2626' }
+                ],
+                ansMag: 5,
+                ansDir: 'S'
+            },
+            {
+                id: 7,
+                category: 'ทิศตรงข้าม (−)',
+                title: 'ลมต้านนักปั่นจักรยานไปทางทิศตะวันตก',
+                hint: 'นักปั่นออกแรงไปทิศตะวันตก 10 N แต่มีลมพัดต้านไปทิศตะวันออก 4 N หักล้างกันเหลือ 10 − 4 = 6 N ทิศตะวันตก',
+                forces: [
+                    { name: 'แรงปั่น (F₁)', mag: 10, dir: 'W', color: '#16a34a' },
+                    { name: 'แรงลมต้าน (F₂)', mag: 4, dir: 'E', color: '#dc2626' }
+                ],
+                ansMag: 6,
+                ansDir: 'W'
+            },
+            {
+                id: 8,
+                category: 'ทิศตรงข้าม (−)',
+                title: 'บอลลูนลอยขึ้นต้านแรงโน้มถ่วง',
+                hint: 'แรงลอยตัวดันขึ้นทิศเหนือ 12 N แรงดึงลงทิศใต้ 7 N หักล้างกันเหลือ 12 − 7 = 5 N ทิศเหนือ',
+                forces: [
+                    { name: 'แรงลอยตัว (F₁)', mag: 12, dir: 'N', color: '#2563eb' },
+                    { name: 'แรงดึงลง (F₂)', mag: 7, dir: 'S', color: '#dc2626' }
+                ],
+                ansMag: 5,
+                ansDir: 'N'
+            },
+
+            // --- กลุ่มที่ 3 : แรงสมดุล (แรงลัพธ์เป็น 0) ---
+            {
+                id: 9,
+                category: 'แรงสมดุล (= 0)',
+                title: 'ชักเย่อเสมอกันแนวตะวันออก - ตะวันตก',
+                hint: 'แรงทั้งสองฝั่งมีขนาดเท่ากัน (6 N = 6 N) แต่ชี้ตรงข้ามกัน จึงหักล้างกันหมดพอดี แรงลัพธ์ = 0 N และวัตถุหยุดนิ่ง',
+                forces: [
+                    { name: 'แรง F₁', mag: 6, dir: 'E', color: '#2563eb' },
+                    { name: 'แรง F₂', mag: 6, dir: 'W', color: '#dc2626' }
+                ],
+                ansMag: 0,
+                ansDir: 'NONE'
+            },
+            {
+                id: 10,
+                category: 'แรงสมดุล (= 0)',
+                title: 'กล่องวางนิ่งบนโต๊ะ (แรงยก = แรงโน้มถ่วง)',
+                hint: 'แรงชี้ขึ้นทิศเหนือ 10 N เท่ากับแรงดึงลงทิศใต้ 10 N หักล้างกันเหลือ 0 N วัตถุจึงหยุดนิ่งอยู่กับที่',
+                forces: [
+                    { name: 'แรงพยุง (F₁)', mag: 10, dir: 'N', color: '#16a34a' },
+                    { name: 'แรงโน้มถ่วง (F₂)', mag: 10, dir: 'S', color: '#dc2626' }
+                ],
+                ansMag: 0,
+                ansDir: 'NONE'
+            },
+
+            // --- กลุ่มที่ 4 : โจทย์ผสม 3-4 แรงในแนวเดียวกันและแรงตั้งฉาก ---
+            {
+                id: 11,
+                category: 'รวม 3 แรง (+ และ −)',
+                title: 'ศึกชักเย่อ 2 รุม 1 แนวตะวันออก - ตะวันตก',
+                hint: 'รวมแรงฝั่งทิศตะวันออกก่อน: 5 + 4 = 9 N จากนั้นลบด้วยแรงฝั่งทิศตะวันตก 3 N จะเหลือ 9 − 3 = 6 N ทิศตะวันออก',
+                forces: [
+                    { name: 'แรง F₁', mag: 5, dir: 'E', color: '#2563eb' },
+                    { name: 'แรง F₂', mag: 4, dir: 'E', color: '#16a34a' },
+                    { name: 'แรง F₃', mag: 3, dir: 'W', color: '#dc2626' }
+                ],
+                ansMag: 6,
+                ansDir: 'E'
+            },
+            {
+                id: 12,
+                category: 'รวม 3 แรง (+ และ −)',
+                title: 'ดึงวัตถุ 3 แรงในแนวเหนือ - ใต้',
+                hint: 'รวมแรงทิศใต้ก่อน: 6 + 5 = 11 N แล้วหักลบกับแรงทิศเหนือ 4 N จะเหลือ 11 − 4 = 7 N ไปทางทิศใต้',
+                forces: [
+                    { name: 'แรง F₁', mag: 4, dir: 'N', color: '#2563eb' },
+                    { name: 'แรง F₂', mag: 6, dir: 'S', color: '#dc2626' },
+                    { name: 'แรง F₃', mag: 5, dir: 'S', color: '#ea580c' }
+                ],
+                ansMag: 7,
+                ansDir: 'S'
+            },
+            {
+                id: 13,
+                category: 'แรงตั้งฉาก (พิทากอรัส 3-4-5)',
+                title: 'แรงตั้งฉากทิศเหนือ 3 N และทิศตะวันออก 4 N',
+                hint: 'แรงตั้งฉากกัน (เหนือ 3 N กับ ออก 4 N) ใช้ทฤษฎีบทพีทาโกรัส: √(3² + 4²) = √(9 + 16) = √25 = 5 N โดยลูกศรลัพธ์จะพุ่งเฉียงไปทาง "ทิศตะวันออกเฉียงเหนือ (↗)"',
+                forces: [
+                    { name: 'แรง F₁', mag: 3, dir: 'N', color: '#2563eb' },
+                    { name: 'แรง F₂', mag: 4, dir: 'E', color: '#16a34a' }
+                ],
+                ansMag: 5,
+                ansDir: 'NE'
+            },
+            {
+                id: 14,
+                category: 'แรงตั้งฉาก (พิทากอรัส 6-8-10)',
+                title: 'แรงตั้งฉากทิศใต้ 6 N และทิศตะวันตก 8 N',
+                hint: 'แรงตั้งฉากกัน (ใต้ 6 N กับ ตก 8 N) คำนวณขนาดได้ √(6² + 8²) = √(36 + 64) = √100 = 10 N และลูกศรลัพธ์พุ่งเฉียงไปทาง "ทิศตะวันตกเฉียงใต้ (↙)"',
+                forces: [
+                    { name: 'แรง F₁', mag: 6, dir: 'S', color: '#2563eb' },
+                    { name: 'แรง F₂', mag: 8, dir: 'W', color: '#dc2626' }
+                ],
+                ansMag: 10,
+                ansDir: 'SW'
+            },
+            {
+                id: 15,
+                category: 'แรงตั้งฉาก (พิทากอรัส 5-12-13)',
+                title: 'แรงตั้งฉากทิศเหนือ 5 N และทิศตะวันตก 12 N',
+                hint: 'แรงตั้งฉากกัน (เหนือ 5 N กับ ตก 12 N) คำนวณขนาดได้ √(5² + 12²) = √(25 + 144) = √169 = 13 N และลูกศรลัพธ์พุ่งเฉียงไปทาง "ทิศตะวันตกเฉียงเหนือ (↖)"',
+                forces: [
+                    { name: 'แรง F₁', mag: 5, dir: 'N', color: '#2563eb' },
+                    { name: 'แรง F₂', mag: 12, dir: 'W', color: '#9333ea' }
+                ],
+                ansMag: 13,
+                ansDir: 'NW'
+            },
+            {
+                id: 16,
+                category: 'รวม 4 แรง (หักล้างทีละแกน)',
+                title: '4 แรงกระทำรอบทิศ (แกนเหนือ-ใต้สมดุล)',
+                hint: 'ดูทีละแกน: แกนเหนือ-ใต้ (เหนือ 5 N กับ ใต้ 5 N หักล้างกันเหลือ 0!) ส่วนแกนออก-ตก (ออก 9 N ลบ ตก 2 N เหลือ 7 N ทิศตะวันออก)',
+                forces: [
+                    { name: 'แรง F₁', mag: 5, dir: 'N', color: '#2563eb' },
+                    { name: 'แรง F₂', mag: 5, dir: 'S', color: '#0891b2' },
+                    { name: 'แรง F₃', mag: 9, dir: 'E', color: '#16a34a' },
+                    { name: 'แรง F₄', mag: 2, dir: 'W', color: '#dc2626' }
+                ],
+                ansMag: 7,
+                ansDir: 'E'
+            },
+            {
+                id: 17,
+                category: 'รวม 4 แรง (หักล้างแล้วตั้งฉาก)',
+                title: '4 แรงรอบทิศ (เหลือตั้งฉาก 3 N กับ 4 N)',
+                hint: 'หักล้างทีละแกนก่อน: แกนออก-ตก (ออก 7 − ตก 4 = ออก 3 N) และแกนเหนือ-ใต้ (ใต้ 8 − เหนือ 4 = ใต้ 4 N) เหลือแรงตั้งฉาก 3 N กับ 4 N รวมได้ 5 N ทิศตะวันออกเฉียงใต้ (↘)',
+                forces: [
+                    { name: 'แรง F₁', mag: 4, dir: 'N', color: '#2563eb' },
+                    { name: 'แรง F₂', mag: 8, dir: 'S', color: '#dc2626' },
+                    { name: 'แรง F₃', mag: 7, dir: 'E', color: '#16a34a' },
+                    { name: 'แรง F₄', mag: 4, dir: 'W', color: '#9333ea' }
+                ],
+                ansMag: 5,
+                ansDir: 'SE'
+            }
+        ];
+
+        // =====================================================================
+        // 3. ข้อมูลสีธาตุและคลังโจทย์ 25 ด่าน สำหรับเกมดุลสมการเคมี ม.3
+        // =====================================================================
+        // 2. ข้อมูลสีธาตุและคลังโจทย์ 25 ด่าน สำหรับเกมดุลสมการเคมี ม.3
+        // =====================================================================
+        const ELEMENT_STYLES = {
+            H:  { name: 'ไฮโดรเจน', bg: '#ffffff', border: '#38bdf8', text: '#0369a1' },
+            O:  { name: 'ออกซิเจน', bg: '#ef4444', border: '#991b1b', text: '#ffffff' },
+            Mg: { name: 'แมกนีเซียม', bg: '#16a34a', border: '#14532d', text: '#ffffff' },
+            Na: { name: 'โซเดียม', bg: '#eab308', border: '#854d0e', text: '#ffffff' },
+            Cl: { name: 'คลอรีน', bg: '#84cc16', border: '#3f6212', text: '#ffffff' },
+            N:  { name: 'ไนโตรเจน', bg: '#2563eb', border: '#1e3a8a', text: '#ffffff' },
+            C:  { name: 'คาร์บอน', bg: '#334155', border: '#0f172a', text: '#ffffff' },
+            Ca: { name: 'แคลเซียม', bg: '#f59e0b', border: '#78350f', text: '#ffffff' },
+            Zn: { name: 'สังกะสี', bg: '#9333ea', border: '#581c87', text: '#ffffff' },
+            Al: { name: 'อะลูมิเนียม', bg: '#f97316', border: '#7c2d12', text: '#ffffff' },
+            K:  { name: 'โพแทสเซียม', bg: '#ec4899', border: '#831843', text: '#ffffff' },
+            Fe: { name: 'เหล็ก', bg: '#b45309', border: '#451a03', text: '#ffffff' },
+            P:  { name: 'ฟอสฟอรัส', bg: '#ea580c', border: '#7c2d12', text: '#ffffff' },
+            S:  { name: 'กำมะถัน', bg: '#facc15', border: '#854d0e', text: '#0f172a' },
+            Cu: { name: 'ทองแดง', bg: '#c2410c', border: '#431407', text: '#ffffff' },
+            Ag: { name: 'เงิน', bg: '#94a3b8', border: '#334155', text: '#ffffff' }
+        };
+
+        const LEVELS = [
+            // --- ระดับง่าย (ด่าน 1 - 8) ---
+            {
+                id: 1,
+                title: 'การเผาไหม้ลวดแมกนีเซียม',
+                difficulty: 'ระดับง่าย',
+                hint: 'สังเกตออกซิเจน (O) ฝั่งซ้ายมี 2 อะตอม แต่ฝั่งขวามีแค่ 1 อะตอม ลองกดเพิ่มจำนวน MgO ฝั่งขวาเป็น 2 ก่อน แล้วค่อยกลับมาปรับ Mg ฝั่งซ้ายนะ',
+                reactants: [
+                    { formulaHtml: 'Mg', name: 'โลหะแมกนีเซียม', atoms: { Mg: 1 } },
+                    { formulaHtml: 'O<sub>2</sub>', name: 'แก๊สออกซิเจน', atoms: { O: 2 } }
+                ],
+                products: [
+                    { formulaHtml: 'MgO', name: 'แมกนีเซียมออกไซด์', atoms: { Mg: 1, O: 1 } }
+                ],
+                solution: { r: [2, 1], p: [2] }
+            },
+            {
+                id: 2,
+                title: 'ปฏิกิริยาการเกิดเกลือแกง',
+                difficulty: 'ระดับง่าย',
+                hint: 'คลอรีน (Cl) ฝั่งซ้ายมาเป็นคู่ (Cl₂ = 2 อะตอม) แต่ฝั่งขวามี Cl แค่ 1 ตัวใน NaCl ให้ลองเพิ่ม NaCl ฝั่งขวาเป็น 2 ชุดก่อนเลย',
+                reactants: [
+                    { formulaHtml: 'Na', name: 'โลหะโซเดียม', atoms: { Na: 1 } },
+                    { formulaHtml: 'Cl<sub>2</sub>', name: 'แก๊สคลอรีน', atoms: { Cl: 2 } }
+                ],
+                products: [
+                    { formulaHtml: 'NaCl', name: 'โซเดียมคลอไรด์ (เกลือแกง)', atoms: { Na: 1, Cl: 1 } }
+                ],
+                solution: { r: [2, 1], p: [2] }
+            },
+            {
+                id: 3,
+                title: 'การเกิดน้ำจากแก๊สไฮโดรเจน',
+                difficulty: 'ระดับง่าย',
+                hint: 'ออกซิเจน (O) ฝั่งซ้ายมี 2 แต่ฝั่งขวามี 1 ให้กดเพิ่มน้ำ (H₂O) เป็น 2 โมเลกุลก่อน จากนั้นดูว่าไฮโดรเจน (H) ฝั่งขวาเพิ่มเป็นกี่ตัวแล้วไปเติมฝั่งซ้าย',
+                reactants: [
+                    { formulaHtml: 'H<sub>2</sub>', name: 'แก๊สไฮโดรเจน', atoms: { H: 2 } },
+                    { formulaHtml: 'O<sub>2</sub>', name: 'แก๊สออกซิเจน', atoms: { O: 2 } }
+                ],
+                products: [
+                    { formulaHtml: 'H<sub>2</sub>O', name: 'น้ำ', atoms: { H: 2, O: 1 } }
+                ],
+                solution: { r: [2, 1], p: [2] }
+            },
+            {
+                id: 4,
+                title: 'การเกิดแคลเซียมออกไซด์ (ปูนขาว)',
+                difficulty: 'ระดับง่าย',
+                hint: 'รูปแบบคล้ายข้อ 1 เลย! ออกซิเจนฝั่งซ้ายมี 2 อะตอม ฝั่งขวามี 1 อะตอม เริ่มจากเพิ่ม CaO ฝั่งขวาเป็น 2 ชุด',
+                reactants: [
+                    { formulaHtml: 'Ca', name: 'แคลเซียม', atoms: { Ca: 1 } },
+                    { formulaHtml: 'O<sub>2</sub>', name: 'แก๊สออกซิเจน', atoms: { O: 2 } }
+                ],
+                products: [
+                    { formulaHtml: 'CaO', name: 'แคลเซียมออกไซด์', atoms: { Ca: 1, O: 1 } }
+                ],
+                solution: { r: [2, 1], p: [2] }
+            },
+            {
+                id: 5,
+                title: 'การเผาไหม้ถ่านไม้ (สมการสมดุลเริ่มต้น)',
+                difficulty: 'ระดับง่าย',
+                hint: 'ลองนับจำนวนอะตอมเริ่มต้นดูสิ! คาร์บอน (C) ซ้าย 1 = ขวา 1 และออกซิเจน (O) ซ้าย 2 = ขวา 2 สมการนี้สมดุลอยู่แล้วโดยไม่ต้องเพิ่มเลขเลย',
+                reactants: [
+                    { formulaHtml: 'C', name: 'ถ่านคาร์บอน', atoms: { C: 1 } },
+                    { formulaHtml: 'O<sub>2</sub>', name: 'แก๊สออกซิเจน', atoms: { O: 2 } }
+                ],
+                products: [
+                    { formulaHtml: 'CO<sub>2</sub>', name: 'แก๊สคาร์บอนไดออกไซด์', atoms: { C: 1, O: 2 } }
+                ],
+                solution: { r: [1, 1], p: [1] }
+            },
+            {
+                id: 6,
+                title: 'การเผาหินปูนทำปูนขาว',
+                difficulty: 'ระดับง่าย',
+                hint: 'ตรวจสอบจำนวนอะตอม Ca, C และ O ทั้งฝั่งซ้ายและขวาเทียบกันทีละตัว สมการนี้สมดุลลงตัวตั้งแต่เริ่มต้น (1 : 1 : 1)',
+                reactants: [
+                    { formulaHtml: 'CaCO<sub>3</sub>', name: 'หินปูน (แคลเซียมคาร์บอเนต)', atoms: { Ca: 1, C: 1, O: 3 } }
+                ],
+                products: [
+                    { formulaHtml: 'CaO', name: 'ปูนขาว', atoms: { Ca: 1, O: 1 } },
+                    { formulaHtml: 'CO<sub>2</sub>', name: 'แก๊สคาร์บอนไดออกไซด์', atoms: { C: 1, O: 2 } }
+                ],
+                solution: { r: [1], p: [1, 1] }
+            },
+            {
+                id: 7,
+                title: 'ปฏิกิริยาสะเทินกรดเกลือกับโซดาไฟ',
+                difficulty: 'ระดับง่าย',
+                hint: 'ลองนับ H ทั้งหมดฝั่งซ้าย (1 ตัวใน NaOH + 1 ตัวใน HCl = 2 ตัว) ซึ่งเท่ากับ H₂O ฝั่งขวาพอดี ทุกธาตุสมดุลแล้ว!',
+                reactants: [
+                    { formulaHtml: 'NaOH', name: 'โซเดียมไฮดรอกไซด์', atoms: { Na: 1, O: 1, H: 1 } },
+                    { formulaHtml: 'HCl', name: 'กรดไฮโดรคลอริก', atoms: { H: 1, Cl: 1 } }
+                ],
+                products: [
+                    { formulaHtml: 'NaCl', name: 'เกลือแกง', atoms: { Na: 1, Cl: 1 } },
+                    { formulaHtml: 'H<sub>2</sub>O', name: 'น้ำ', atoms: { H: 2, O: 1 } }
+                ],
+                solution: { r: [1, 1], p: [1, 1] }
+            },
+            {
+                id: 8,
+                title: 'การละลายน้ำของโซเดียมออกไซด์',
+                difficulty: 'ระดับง่าย',
+                hint: 'ฝั่งซ้ายมี Na ถึง 2 อะตอม (ใน Na₂O) และมี H 2 อะตอม (ใน H₂O) ลองเพิ่ม NaOH ฝั่งขวาเป็น 2 ชุดดูสิ!',
+                reactants: [
+                    { formulaHtml: 'Na<sub>2</sub>O', name: 'โซเดียมออกไซด์', atoms: { Na: 2, O: 1 } },
+                    { formulaHtml: 'H<sub>2</sub>O', name: 'น้ำ', atoms: { H: 2, O: 1 } }
+                ],
+                products: [
+                    { formulaHtml: 'NaOH', name: 'โซเดียมไฮดรอกไซด์', atoms: { Na: 1, O: 1, H: 1 } }
+                ],
+                solution: { r: [1, 1], p: [2] }
+            },
+
+            // --- ระดับปานกลาง (ด่าน 9 - 18) ---
+            {
+                id: 9,
+                title: 'การสังเคราะห์แก๊สแอมโมเนีย',
+                difficulty: 'ระดับปานกลาง',
+                hint: 'เริ่มดุลไนโตรเจน (N) ก่อน: ฝั่งซ้ายมี N₂ (2 อะตอม) จึงต้องเพิ่ม NH₃ ฝั่งขวาเป็น 2 ชุด ทำให้ฝั่งขวามี H รวม 6 อะตอม ทีนี้ลองปรับ H₂ ฝั่งซ้ายให้ได้ 6 อะตอม',
+                reactants: [
+                    { formulaHtml: 'N<sub>2</sub>', name: 'แก๊สไนโตรเจน', atoms: { N: 2 } },
+                    { formulaHtml: 'H<sub>2</sub>', name: 'แก๊สไฮโดรเจน', atoms: { H: 2 } }
+                ],
+                products: [
+                    { formulaHtml: 'NH<sub>3</sub>', name: 'แก๊สแอมโมเนีย', atoms: { N: 1, H: 3 } }
+                ],
+                solution: { r: [1, 3], p: [2] }
+            },
+            {
+                id: 10,
+                title: 'สังกะสีทำปฏิกิริยากับกรดเกลือ',
+                difficulty: 'ระดับปานกลาง',
+                hint: 'สังกะสี (Zn) เท่ากันแล้ว (1 = 1) แต่ฝั่งขวามี H = 2 และ Cl = 2 ส่วนฝั่งซ้ายมีอยู่ใน HCl อย่างละ 1 ลองกดเพิ่ม HCl ฝั่งซ้ายเป็น 2 ชุดดูสิ!',
+                reactants: [
+                    { formulaHtml: 'Zn', name: 'โลหะสังกะสี', atoms: { Zn: 1 } },
+                    { formulaHtml: 'HCl', name: 'กรดไฮโดรคลอริก', atoms: { H: 1, Cl: 1 } }
+                ],
+                products: [
+                    { formulaHtml: 'ZnCl<sub>2</sub>', name: 'ซิงค์คลอไรด์', atoms: { Zn: 1, Cl: 2 } },
+                    { formulaHtml: 'H<sub>2</sub>', name: 'แก๊สไฮโดรเจน', atoms: { H: 2 } }
+                ],
+                solution: { r: [1, 2], p: [1, 1] }
+            },
+            {
+                id: 11,
+                title: 'เหล็กทำปฏิกิริยากับกรดเกลือ',
+                difficulty: 'ระดับปานกลาง',
+                hint: 'รูปแบบเดียวกับสังกะสีเลย! ฝั่งขวามี Cl = 2 และ H = 2 ลองเพิ่ม HCl ฝั่งซ้ายเป็น 2 ชุดเพื่อให้ H และ Cl เท่ากัน',
+                reactants: [
+                    { formulaHtml: 'Fe', name: 'โลหะเหล็ก', atoms: { Fe: 1 } },
+                    { formulaHtml: 'HCl', name: 'กรดไฮโดรคลอริก', atoms: { H: 1, Cl: 1 } }
+                ],
+                products: [
+                    { formulaHtml: 'FeCl<sub>2</sub>', name: 'ไอร์ออน(II) คลอไรด์', atoms: { Fe: 1, Cl: 2 } },
+                    { formulaHtml: 'H<sub>2</sub>', name: 'แก๊สไฮโดรเจน', atoms: { H: 2 } }
+                ],
+                solution: { r: [1, 2], p: [1, 1] }
+            },
+            {
+                id: 12,
+                title: 'การสลายตัวของไฮโดรเจนเปอร์ออกไซด์',
+                difficulty: 'ระดับปานกลาง',
+                hint: 'ฝั่งขวามีออกซิเจนรวม 3 อะตอม (เลขคี่) ส่วนฝั่งซ้าย H₂O₂ มี O ครั้งละ 2 อะตอม (เลขคู่) ลองเพิ่ม H₂O₂ ฝั่งซ้ายเป็น 2 ชุด และเพิ่ม H₂O ฝั่งขวาเป็น 2 ชุด',
+                reactants: [
+                    { formulaHtml: 'H<sub>2</sub>O<sub>2</sub>', name: 'ไฮโดรเจนเปอร์ออกไซด์', atoms: { H: 2, O: 2 } }
+                ],
+                products: [
+                    { formulaHtml: 'H<sub>2</sub>O', name: 'น้ำ', atoms: { H: 2, O: 1 } },
+                    { formulaHtml: 'O<sub>2</sub>', name: 'แก๊สออกซิเจน', atoms: { O: 2 } }
+                ],
+                solution: { r: [2], p: [2, 1] }
+            },
+            {
+                id: 13,
+                title: 'การเกิดซัลเฟอร์ไตรออกไซด์',
+                difficulty: 'ระดับปานกลาง',
+                hint: 'ฝั่งขวามี O = 3 (เลขคี่) ลองทำ SO₃ เป็น 2 ชุด (ได้ O = 6) จากนั้นปรับ SO₂ ฝั่งซ้ายเป็น 2 ชุดเพื่อให้กำมะถัน (S) เท่ากัน',
+                reactants: [
+                    { formulaHtml: 'SO<sub>2</sub>', name: 'ซัลเฟอร์ไดออกไซด์', atoms: { S: 1, O: 2 } },
+                    { formulaHtml: 'O<sub>2</sub>', name: 'แก๊สออกซิเจน', atoms: { O: 2 } }
+                ],
+                products: [
+                    { formulaHtml: 'SO<sub>3</sub>', name: 'ซัลเฟอร์ไตรออกไซด์', atoms: { S: 1, O: 3 } }
+                ],
+                solution: { r: [2, 1], p: [2] }
+            },
+            {
+                id: 14,
+                title: 'การเกิดอะลูมิเนียมออกไซด์',
+                difficulty: 'ระดับปานกลาง',
+                hint: 'เทคนิคเลขคู่-คี่: ออกซิเจนฝั่งซ้ายมี 2 ฝั่งขวามี 3 (ค.ร.น. คือ 6) ให้ทำออกซิเจนทั้งสองฝั่งให้ได้ 6 อะตอมก่อน แล้วค่อยดุลอะลูมิเนียม (Al) เป็นลำดับสุดท้าย',
+                reactants: [
+                    { formulaHtml: 'Al', name: 'โลหะอะลูมิเนียม', atoms: { Al: 1 } },
+                    { formulaHtml: 'O<sub>2</sub>', name: 'แก๊สออกซิเจน', atoms: { O: 2 } }
+                ],
+                products: [
+                    { formulaHtml: 'Al<sub>2</sub>O<sub>3</sub>', name: 'อะลูมิเนียมออกไซด์', atoms: { Al: 2, O: 3 } }
+                ],
+                solution: { r: [4, 3], p: [2] }
+            },
+            {
+                id: 15,
+                title: 'การเกิดสนิมเหล็ก',
+                difficulty: 'ระดับปานกลาง',
+                hint: 'เหมือนข้ออะลูมิเนียมออกไซด์เลย! ทำออกซิเจน (O) ให้เท่ากับ 6 อะตอมทั้งสองฝั่ง (เติม 3 หน้า O₂ และ 2 หน้า Fe₂O₃) แล้วเติม 4 หน้า Fe',
+                reactants: [
+                    { formulaHtml: 'Fe', name: 'โลหะเหล็ก', atoms: { Fe: 1 } },
+                    { formulaHtml: 'O<sub>2</sub>', name: 'แก๊สออกซิเจน', atoms: { O: 2 } }
+                ],
+                products: [
+                    { formulaHtml: 'Fe<sub>2</sub>O<sub>3</sub>', name: 'สนิมเหล็ก (ไอร์ออนออกไซด์)', atoms: { Fe: 2, O: 3 } }
+                ],
+                solution: { r: [4, 3], p: [2] }
+            },
+            {
+                id: 16,
+                title: 'การเผาไหม้ฟอสฟอรัสขาว',
+                difficulty: 'ระดับปานกลาง',
+                hint: 'ฝั่งขวามี P = 4 และ O = 10 ใน P₄O₁₀ (1 โมเลกุล) ดังนั้นฟอสฟอรัสเท่ากันแล้ว เหลือแค่เติม 5 หน้า O₂ ฝั่งซ้ายให้ได้ 10 อะตอม',
+                reactants: [
+                    { formulaHtml: 'P<sub>4</sub>', name: 'ฟอสฟอรัสขาว', atoms: { P: 4 } },
+                    { formulaHtml: 'O<sub>2</sub>', name: 'แก๊สออกซิเจน', atoms: { O: 2 } }
+                ],
+                products: [
+                    { formulaHtml: 'P<sub>4</sub>O<sub>10</sub>', name: 'ฟอสฟอรัสเพนทอกไซด์', atoms: { P: 4, O: 10 } }
+                ],
+                solution: { r: [1, 5], p: [1] }
+            },
+            {
+                id: 17,
+                title: 'การสลายตัวของโพแทสเซียมคลอเรต',
+                difficulty: 'ระดับปานกลาง',
+                hint: 'ดูออกซิเจน (O) ก่อน: ฝั่งซ้ายมี 3 ฝั่งขวามี 2 ให้ทำ O ทั้งสองฝั่งให้เท่ากับ 6 อะตอม (เติม 2 หน้า KClO₃ และ 3 หน้า O₂) แล้วค่อยปรับ KCl ฝั่งขวา',
+                reactants: [
+                    { formulaHtml: 'KClO<sub>3</sub>', name: 'โพแทสเซียมคลอเรต', atoms: { K: 1, Cl: 1, O: 3 } }
+                ],
+                products: [
+                    { formulaHtml: 'KCl', name: 'โพแทสเซียมคลอไรด์', atoms: { K: 1, Cl: 1 } },
+                    { formulaHtml: 'O<sub>2</sub>', name: 'แก๊สออกซิเจน', atoms: { O: 2 } }
+                ],
+                solution: { r: [2], p: [2, 3] }
+            },
+            {
+                id: 18,
+                title: 'การรีดิวซ์คอปเปอร์(II) ออกไซด์ด้วยไฮโดรเจน',
+                difficulty: 'ระดับปานกลาง',
+                hint: 'ลองเทียบจำนวนอะตอม Cu, O และ H ฝั่งซ้ายกับฝั่งขวาทีละตัว จะพบว่าทุกธาตุสมดุลลงตัวอยู่แล้ว (1 : 1 : 1 : 1)',
+                reactants: [
+                    { formulaHtml: 'CuO', name: 'คอปเปอร์(II) ออกไซด์', atoms: { Cu: 1, O: 1 } },
+                    { formulaHtml: 'H<sub>2</sub>', name: 'แก๊สไฮโดรเจน', atoms: { H: 2 } }
+                ],
+                products: [
+                    { formulaHtml: 'Cu', name: 'โลหะทองแดง', atoms: { Cu: 1 } },
+                    { formulaHtml: 'H<sub>2</sub>O', name: 'น้ำ', atoms: { H: 2, O: 1 } }
+                ],
+                solution: { r: [1, 1], p: [1, 1] }
+            },
+
+            // --- ระดับท้าทาย (ด่าน 19 - 25) ---
+            {
+                id: 19,
+                title: 'ปฏิกิริยาตกตะกอนซิลเวอร์คลอไรด์',
+                difficulty: 'ระดับท้าทาย',
+                hint: 'ข้อนี้มีธาตุเยอะ (Ag, N, O, Na, Cl) แต่ลองนับทีละธาตุจะพบว่าทุกธาตุฝั่งซ้ายเท่ากับฝั่งขวาเป๊ะ! สมดุลอยู่แล้วโดยไม่ต้องเติมเลข',
+                reactants: [
+                    { formulaHtml: 'AgNO<sub>3</sub>', name: 'ซิลเวอร์ไนเตรต', atoms: { Ag: 1, N: 1, O: 3 } },
+                    { formulaHtml: 'NaCl', name: 'โซเดียมคลอไรด์', atoms: { Na: 1, Cl: 1 } }
+                ],
+                products: [
+                    { formulaHtml: 'AgCl', name: 'ซิลเวอร์คลอไรด์', atoms: { Ag: 1, Cl: 1 } },
+                    { formulaHtml: 'NaNO<sub>3</sub>', name: 'โซเดียมไนเตรต', atoms: { Na: 1, N: 1, O: 3 } }
+                ],
+                solution: { r: [1, 1], p: [1, 1] }
+            },
+            {
+                id: 20,
+                title: 'ปฏิกิริยากรดซัลฟิวริกกับโซดาไฟ',
+                difficulty: 'ระดับท้าทาย',
+                hint: 'เริ่มดุล Na ก่อน: ฝั่งขวามี Na₂SO₄ (Na = 2) จึงเติม 2 หน้า NaOH ฝั่งซ้าย จากนั้นนับ H ฝั่งซ้ายรวมได้ 4 ตัว จึงเติม 2 หน้า H₂O ฝั่งขวา',
+                reactants: [
+                    { formulaHtml: 'H<sub>2</sub>SO<sub>4</sub>', name: 'กรดซัลฟิวริก', atoms: { H: 2, S: 1, O: 4 } },
+                    { formulaHtml: 'NaOH', name: 'โซเดียมไฮดรอกไซด์', atoms: { Na: 1, O: 1, H: 1 } }
+                ],
+                products: [
+                    { formulaHtml: 'Na<sub>2</sub>SO<sub>4</sub>', name: 'โซเดียมซัลเฟต', atoms: { Na: 2, S: 1, O: 4 } },
+                    { formulaHtml: 'H<sub>2</sub>O', name: 'น้ำ', atoms: { H: 2, O: 1 } }
+                ],
+                solution: { r: [1, 2], p: [1, 2] }
+            },
+            {
+                id: 21,
+                title: 'การเผาไหม้แก๊สมีเทน',
+                difficulty: 'ระดับท้าทาย',
+                hint: 'ดุลตามลำดับ C → H → O : คาร์บอน (C) เท่ากันแล้ว ต่อมาดุล H โดยเติม 2 หน้า H₂O สุดท้ายนับ O ฝั่งขวาทั้งหมด (ได้ 4) แล้วไปเติม 2 หน้า O₂ ฝั่งซ้าย',
+                reactants: [
+                    { formulaHtml: 'CH<sub>4</sub>', name: 'แก๊สมีเทน', atoms: { C: 1, H: 4 } },
+                    { formulaHtml: 'O<sub>2</sub>', name: 'แก๊สออกซิเจน', atoms: { O: 2 } }
+                ],
+                products: [
+                    { formulaHtml: 'CO<sub>2</sub>', name: 'แก๊สคาร์บอนไดออกไซด์', atoms: { C: 1, O: 2 } },
+                    { formulaHtml: 'H<sub>2</sub>O', name: 'ไอน้ำ', atoms: { H: 2, O: 1 } }
+                ],
+                solution: { r: [1, 2], p: [1, 2] }
+            },
+            {
+                id: 22,
+                title: 'การเผาไหม้แก๊สโพรเพน (แก๊สหุงต้ม)',
+                difficulty: 'ระดับท้าทาย',
+                hint: 'ดุล C → H → O : เติม 3 หน้า CO₂ (ได้ C=3) → เติม 4 หน้า H₂O (ได้ H=8) → นับ O ฝั่งขวารวมได้ 6 + 4 = 10 อะตอม จึงเติม 5 หน้า O₂ ฝั่งซ้าย',
+                reactants: [
+                    { formulaHtml: 'C<sub>3</sub>H<sub>8</sub>', name: 'แก๊สโพรเพน', atoms: { C: 3, H: 8 } },
+                    { formulaHtml: 'O<sub>2</sub>', name: 'แก๊สออกซิเจน', atoms: { O: 2 } }
+                ],
+                products: [
+                    { formulaHtml: 'CO<sub>2</sub>', name: 'แก๊สคาร์บอนไดออกไซด์', atoms: { C: 1, O: 2 } },
+                    { formulaHtml: 'H<sub>2</sub>O', name: 'ไอน้ำ', atoms: { H: 2, O: 1 } }
+                ],
+                solution: { r: [1, 5], p: [3, 4] }
+            },
+            {
+                id: 23,
+                title: 'การเผาไหม้แก๊สอีเทน',
+                difficulty: 'ระดับท้าทาย',
+                hint: 'ถ้าใช้ C₂H₆ แค่ 1 ชุด จะได้ O ฝั่งขวาเป็นเลขคี่ (7 อะตอม) ให้ลองเพิ่ม C₂H₆ เป็น 2 ชุด (ได้ CO₂ = 4, H₂O = 6) แล้วนับ O ฝั่งขวารวมได้ 14 จึงเติม 7 หน้า O₂',
+                reactants: [
+                    { formulaHtml: 'C<sub>2</sub>H<sub>6</sub>', name: 'แก๊สอีเทน', atoms: { C: 2, H: 6 } },
+                    { formulaHtml: 'O<sub>2</sub>', name: 'แก๊สออกซิเจน', atoms: { O: 2 } }
+                ],
+                products: [
+                    { formulaHtml: 'CO<sub>2</sub>', name: 'แก๊สคาร์บอนไดออกไซด์', atoms: { C: 1, O: 2 } },
+                    { formulaHtml: 'H<sub>2</sub>O', name: 'ไอน้ำ', atoms: { H: 2, O: 1 } }
+                ],
+                solution: { r: [2, 7], p: [4, 6] }
+            },
+            {
+                id: 24,
+                title: 'อะลูมิเนียมทำปฏิกิริยากับกรดเกลือ',
+                difficulty: 'ระดับท้าทาย',
+                hint: 'สังเกต H และ Cl ใน HCl ต้องเพิ่มเป็นเลขคู่เพื่อให้ H₂ ฝั่งขวาลงตัว และต้องหาร 3 ลงตัวสำหรับ AlCl₃ (ค.ร.น. คือ 6) ลองเติม 6 หน้า HCl ดู!',
+                reactants: [
+                    { formulaHtml: 'Al', name: 'โลหะอะลูมิเนียม', atoms: { Al: 1 } },
+                    { formulaHtml: 'HCl', name: 'กรดไฮโดรคลอริก', atoms: { H: 1, Cl: 1 } }
+                ],
+                products: [
+                    { formulaHtml: 'AlCl<sub>3</sub>', name: 'อะลูมิเนียมคลอไรด์', atoms: { Al: 1, Cl: 3 } },
+                    { formulaHtml: 'H<sub>2</sub>', name: 'แก๊สไฮโดรเจน', atoms: { H: 2 } }
+                ],
+                solution: { r: [2, 6], p: [2, 3] }
+            },
+            {
+                id: 25,
+                title: 'การถลุงแร่เหล็กด้วยคาร์บอนมอนอกไซด์',
+                difficulty: 'ระดับท้าทาย',
+                hint: 'ข้อปราบเซียน! เริ่มดุลเหล็ก (Fe) เป็น 2 ก่อน จากนั้นสังเกตว่า CO ทุก 1 ชุดที่เพิ่มจะรับ O จาก Fe₂O₃ ได้ 1 ตัว เพื่อกลายเป็น CO₂ ดังนั้นต้องใช้ CO และ CO₂ อย่างละ 3 ชุด',
+                reactants: [
+                    { formulaHtml: 'Fe<sub>2</sub>O<sub>3</sub>', name: 'แร่เหล็กออกไซด์', atoms: { Fe: 2, O: 3 } },
+                    { formulaHtml: 'CO', name: 'แก๊สคาร์บอนมอนอกไซด์', atoms: { C: 1, O: 1 } }
+                ],
+                products: [
+                    { formulaHtml: 'Fe', name: 'โลหะเหล็ก', atoms: { Fe: 1 } },
+                    { formulaHtml: 'CO<sub>2</sub>', name: 'แก๊สคาร์บอนไดออกไซด์', atoms: { C: 1, O: 2 } }
+                ],
+                solution: { r: [1, 3], p: [2, 3] }
+            }
+        ];
+
+        // =====================================================================
+        // 3. สถานะการทำงานของระบบศูนย์รวมเกมและเกมย่อย (State & LocalStorage)
+        // =====================================================================
+        const STORAGE_KEY = 'science_game_hub_progress_v2';
+        let currentGradeFilter = 'all';
+        let currentLevelIdx = 0;
+        let currentFilter = 'all';
+        let completedLevels = new Set();
+        let currentCoeffs = { r: [], p: [] };
+        let modalShownForCurrentSolve = false;
+
+        // สถานะสำหรับเกมเวกเตอร์ของแรง ม.2
+        let forceLevelIdx = 0;
+        let forceCompletedLevels = new Set();
+        let userForceMag = 0;
+        let userForceDir = null;
+        let forceLevelSolved = false;
+        // โหลดประวัติการเล่นจากเครื่องนักเรียน
+        function loadSavedProgress() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                if (raw) {
+                    const data = JSON.parse(raw);
+                    if (Array.isArray(data.chemM3Completed)) {
+                        completedLevels = new Set(data.chemM3Completed);
+                    }
+                    if (Array.isArray(data.forceM2Completed)) {
+                        forceCompletedLevels = new Set(data.forceM2Completed);
+                    }
+                }
+            } catch (e) {
+                // ข้ามหากเบราว์เซอร์ปิดกั้น Storage
+            }
+        }
+
+        // บันทึกประวัติการเล่นลงเครื่อง
+        function saveProgress() {
+            try {
+                const payload = {
+                    chemM3Completed: Array.from(completedLevels),
+                    forceM2Completed: Array.from(forceCompletedLevels)
+                };
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+            } catch (e) {
+                // ข้ามหากเบราว์เซอร์ปิดกั้น Storage
+            }
+        }
+
+        // =====================================================================
+        // 4. ระบบจัดการหน้าศูนย์รวมเกม (HUB NAVIGATION & RENDERING)
+        // =====================================================================
+        function setGradeFilter(grade) {
+            currentGradeFilter = grade;
+            document.querySelectorAll('.grade-tab-btn').forEach(btn => {
+                if (btn.dataset.grade === grade) {
+                    btn.className = 'grade-tab-btn btn-tactile flex-shrink-0 font-prompt font-bold text-sm px-4 py-2 rounded-xl bg-white text-indigo-900 shadow-md';
+                } else {
+                    btn.className = 'grade-tab-btn btn-tactile flex-shrink-0 font-prompt font-semibold text-sm px-4 py-2 rounded-xl bg-white/15 hover:bg-white/25 text-white border border-white/20';
+                }
+            });
+
+            document.getElementById('hubSectionTitle').textContent =
+                grade === 'all' ? 'รายการเกมทั้งหมด' : `เกมวิทยาศาสตร์ ระดับชั้น ${grade}`;
+
+            renderHubCatalog();
+        }
+
+        function renderHubCatalog() {
+            const grid = document.getElementById('gamesCatalogGrid');
+            grid.innerHTML = '';
+
+            const filteredGames = GAME_CATALOG.filter(game =>
+                currentGradeFilter === 'all' || game.grade === currentGradeFilter
+            );
+
+            const totalStarsEarned = completedLevels.size + forceCompletedLevels.size;
+            document.getElementById('hubGameCount').textContent = `แสดง ${filteredGames.length} รายการ`;
+            document.getElementById('hubTotalStars').textContent = `${totalStarsEarned} ดาว`;
+
+            filteredGames.forEach(game => {
+                const isReady = game.status === 'ready';
+                let solvedCount = 0;
+                if (game.id === 'chem-balancing-m3') solvedCount = completedLevels.size;
+                if (game.id === 'force-vectors-m2') solvedCount = forceCompletedLevels.size;
+                const progressPct = Math.round((solvedCount / game.totalLevels) * 100);
+
+                const card = document.createElement('div');
+                card.className = `bg-white rounded-3xl p-4 sm:p-5 border ${isReady ? 'border-slate-200 shadow-sm hover:shadow-md' : 'border-slate-200/80 opacity-85'} flex flex-col justify-between transition-all`;
+
+                card.innerHTML = `
+                    <div>
+                        <div class="flex items-start justify-between gap-3">
+                            <div class="w-13 h-13 rounded-2xl bg-gradient-to-br ${game.colorGradient} text-white flex items-center justify-center text-2xl sm:text-3xl shadow-sm flex-shrink-0 p-2.5">
+                                ${game.icon}
+                            </div>
+                            <div class="flex items-center gap-1.5 flex-wrap justify-end">
+                                <span class="font-prompt font-bold text-xs px-2.5 py-0.5 rounded-full ${game.badgeBg}">
+                                    ชั้น ${game.grade}
+                                </span>
+                                <span class="font-prompt font-medium text-xs px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600">
+                                    ${game.subject}
+                                </span>
+                            </div>
+                        </div>
+
+                        <h3 class="font-prompt font-bold text-lg text-slate-800 mt-3 leading-snug">
+                            ${game.title}
+                        </h3>
+                        <p class="text-xs sm:text-sm text-slate-600 mt-1 leading-relaxed">
+                            ${game.description}
+                        </p>
+                    </div>
+
+                    <div class="mt-4 pt-3 border-t border-slate-100">
+                        ${isReady ? `
+                            <div class="flex items-center justify-between text-xs font-semibold text-slate-500 mb-1.5">
+                                <span>ความคืบหน้า: <strong class="text-slate-800">${solvedCount} / ${game.totalLevels} ด่าน</strong></span>
+                                <span class="text-slate-800 font-prompt font-bold">${progressPct}%</span>
+                            </div>
+                            <div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden mb-3">
+                                <div class="h-full bg-gradient-to-r ${game.colorGradient} rounded-full transition-all duration-300" style="width: ${progressPct}%"></div>
+                            </div>
+                            <button onclick="openGame('${game.id}')" class="btn-tactile w-full bg-gradient-to-r ${game.colorGradient} hover:opacity-95 text-white font-prompt font-bold py-2.5 px-4 rounded-xl text-sm shadow-sm flex items-center justify-center gap-2">
+                                <span>▶</span> <span>เข้าเล่นเกมนี้</span>
+                            </button>
+                        ` : `
+                            <div class="flex items-center justify-between text-xs text-slate-400 mb-2.5">
+                                <span>เตรียมไว้ ${game.totalLevels} ด่าน</span>
+                                <span class="bg-amber-100 text-amber-800 font-prompt font-semibold px-2 py-0.5 rounded-full text-[11px]">รอเพิ่มโจทย์</span>
+                            </div>
+                            <button onclick="openComingSoon('${game.id}')" class="btn-tactile w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-prompt font-semibold py-2.5 px-4 rounded-xl text-sm border border-slate-300">
+                                + เพิ่มเนื้อหาเกมนี้
+                            </button>
+                        `}
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function openGame(gameId) {
+            document.getElementById('hubView').classList.add('hidden');
+            document.getElementById('gameChemView').classList.add('hidden');
+            document.getElementById('gameForceView').classList.add('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            if (gameId === 'chem-balancing-m3') {
+                document.getElementById('gameChemView').classList.remove('hidden');
+                loadLevel(currentLevelIdx);
+            } else if (gameId === 'force-vectors-m2') {
+                document.getElementById('gameForceView').classList.remove('hidden');
+                loadForceLevel(forceLevelIdx);
+            }
+        }
+
+        function backToHub() {
+            document.getElementById('gameChemView').classList.add('hidden');
+            document.getElementById('gameForceView').classList.add('hidden');
+            document.getElementById('hubView').classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            renderHubCatalog();
+        }
+
+        function openComingSoon(gameId) {
+            const game = GAME_CATALOG.find(g => g.id === gameId);
+            if (!game) return;
+            document.getElementById('csIcon').textContent = game.icon;
+            document.getElementById('csGradeBadge').textContent = `ชั้น ${game.grade} • ${game.subject}`;
+            document.getElementById('csTitle').textContent = game.title;
+            document.getElementById('comingSoonModal').classList.remove('hidden');
+        }
+
+        function closeComingSoonModal() {
+            document.getElementById('comingSoonModal').classList.add('hidden');
+        }
+
+        // =====================================================================
+        // 5. ระบบควบคุมการเล่นเกมเวกเตอร์ของแรง ม.2 (FORCE VECTORS LOGIC)
+        // =====================================================================
+        function renderForceLevelSelector() {
+            const container = document.getElementById('forceLevelSelector');
+            container.innerHTML = '';
+
+            FORCE_LEVELS.forEach((lvl, idx) => {
+                const isCurrent = idx === forceLevelIdx;
+                const isDone = forceCompletedLevels.has(lvl.id);
+
+                const btn = document.createElement('button');
+                btn.onclick = () => loadForceLevel(idx);
+
+                let styleClass = 'flex-shrink-0 w-9 h-9 rounded-xl font-prompt font-bold text-sm flex items-center justify-center transition-all ';
+                if (isCurrent) {
+                    styleClass += 'bg-yellow-300 text-orange-950 ring-2 ring-white shadow-md scale-105';
+                } else if (isDone) {
+                    styleClass += 'bg-emerald-500 text-white border border-emerald-300';
+                } else {
+                    styleClass += 'bg-orange-900/60 text-orange-100 hover:bg-orange-700 border border-orange-400/40';
+                }
+
+                btn.className = styleClass;
+                btn.innerHTML = isDone && !isCurrent ? '✓' : `${lvl.id}`;
+                container.appendChild(btn);
+            });
+
+            document.getElementById('forceScoreDisplay').textContent = `${forceCompletedLevels.size} / ${FORCE_LEVELS.length}`;
+        }
+
+        function loadForceLevel(index) {
+            forceLevelIdx = index;
+            forceLevelSolved = false;
+            const lvl = FORCE_LEVELS[index];
+
+            userForceMag = 0;
+            userForceDir = null;
+
+            document.getElementById('forceLevelBadge').textContent = `ด่านที่ ${lvl.id}/${FORCE_LEVELS.length}`;
+            document.getElementById('forceDiffBadge').textContent = lvl.category;
+            document.getElementById('forceTitle').textContent = lvl.title;
+            document.getElementById('forceHintText').textContent = lvl.hint;
+            document.getElementById('forceHintBox').classList.add('hidden');
+            document.getElementById('forceFeedbackBanner').classList.add('hidden');
+
+            document.getElementById('forcePrevBtn').disabled = (index === 0);
+            document.getElementById('forceNextBtn').disabled = (index === FORCE_LEVELS.length - 1);
+
+            updateForceAnswerUI();
+            renderForceLevelSelector();
+            renderForceDiagram(lvl, false);
+            renderForceListCards(lvl);
+        }
+        // วาดแผนภาพเข็มทิศ 4 ทิศ ลูกศรเวกเตอร์ของโจทย์ และลูกศรแรงลัพธ์เฉลย (เมื่อ showResultant = true)
+        function renderForceDiagram(lvl, showResultant = false, targetSvgId = 'forceVectorSvg') {
+            const svg = document.getElementById(targetSvgId);
+            if (!svg) return;
+            const cx = 160;
+            const cy = 160;
+            const maxForce = Math.max(10, lvl.ansMag || 0, ...lvl.forces.map(f => f.mag));
+            const scale = 102 / maxForce; // ความยาวสูงสุดของลูกศร 102px
+            const markerPrefix = targetSvgId === 'forceVectorSvg' ? 'main' : 'modal';
+
+            let svgContent = `
+                <defs>
+                    ${lvl.forces.map((f, i) => `
+                        <marker id="${markerPrefix}-arrow-${i}" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+                            <path d="M0,1 L7,4 L0,7 Z" fill="${f.color}" />
+                        </marker>
+                    `).join('')}
+                    <marker id="${markerPrefix}-arrow-resultant" markerWidth="9" markerHeight="9" refX="6.5" refY="4.5" orient="auto">
+                        <path d="M0,1 L8,4.5 L0,8 Z" fill="#d97706" />
+                    </marker>
+                </defs>
+
+                <!-- วงกลมเข็มทิศพื้นหลัง -->
+                <circle cx="${cx}" cy="${cy}" r="122" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.5" stroke-dasharray="4 4" />
+                <circle cx="${cx}" cy="${cy}" r="75" fill="none" stroke="#f1f5f9" stroke-width="1" />
+
+                <!-- เส้นแกนทิศ เหนือ-ใต้ และ ออก-ตก -->
+                <line x1="${cx}" y1="28" x2="${cx}" y2="292" stroke="#cbd5e1" stroke-width="1.5" stroke-dasharray="3 3" />
+                <line x1="28" y1="${cy}" x2="292" y2="${cy}" stroke="#cbd5e1" stroke-width="1.5" stroke-dasharray="3 3" />
+
+                <!-- ป้ายบอกทิศ เหนือ / ใต้ / ออก / ตก -->
+                <rect x="132" y="2" width="56" height="22" rx="8" fill="#1e293b" />
+                <text x="${cx}" y="17" text-anchor="middle" fill="#ffffff" font-family="Prompt" font-weight="bold" font-size="11">เหนือ (N)</text>
+
+                <rect x="136" y="296" width="48" height="22" rx="8" fill="#475569" />
+                <text x="${cx}" y="311" text-anchor="middle" fill="#ffffff" font-family="Prompt" font-weight="bold" font-size="11">ใต้ (S)</text>
+
+                <rect x="272" y="149" width="46" height="22" rx="8" fill="#475569" />
+                <text x="295" y="164" text-anchor="middle" fill="#ffffff" font-family="Prompt" font-weight="bold" font-size="11">ออก (E)</text>
+
+                <rect x="2" y="149" width="46" height="22" rx="8" fill="#475569" />
+                <text x="25" y="164" text-anchor="middle" fill="#ffffff" font-family="Prompt" font-weight="bold" font-size="11">ตก (W)</text>
+            `;
+
+            // จัดการระยะเยื้อง (Offset) กรณีมีหลายแรงชี้ไปในทิศเดียวกันเพื่อไม่ให้ลูกศรซ้อนทับกัน
+            const dirCounts = {};
+            const dirSeen = {};
+            lvl.forces.forEach(f => { dirCounts[f.dir] = (dirCounts[f.dir] || 0) + 1; });
+
+            lvl.forces.forEach((f, idx) => {
+                const countInSameDir = dirCounts[f.dir];
+                const rank = dirSeen[f.dir] || 0;
+                dirSeen[f.dir] = rank + 1;
+
+                // คำนวณระยะขยับข้างให้ลูกศรเรียงขนานกันสวยๆ
+                const offsetStep = 14;
+                const offset = (rank - (countInSameDir - 1) / 2) * offsetStep;
+
+                const meta = DIR_META[f.dir];
+                const len = Math.max(26, f.mag * scale);
+
+                // จุดเริ่มต้น (ห่างจากขอบกล่องวัตถุ 18px)
+                let x1 = cx + meta.dx * 18 + (meta.dy !== 0 ? offset : 0);
+                let y1 = cy + meta.dy * 18 + (meta.dx !== 0 ? offset : 0);
+                let x2 = x1 + meta.dx * len;
+                let y2 = y1 + meta.dy * len;
+
+                // ตำแหน่งป้ายตัวเลขขนาดแรง (N)
+                let labelX = x2 + meta.dx * 16 + (meta.dy !== 0 ? (offset >= 0 ? 14 : -14) : 0);
+                let labelY = y2 + meta.dy * 15 + (meta.dx !== 0 ? (offset >= 0 ? 12 : -8) : 4);
+
+                const lineOpacity = showResultant ? '0.65' : '1';
+                svgContent += `
+                    <line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"
+                          stroke="${f.color}" stroke-width="4.5" stroke-linecap="round" opacity="${lineOpacity}"
+                          marker-end="url(#${markerPrefix}-arrow-${idx})" />
+                    <g transform="translate(${labelX}, ${labelY})" opacity="${showResultant ? '0.85' : '1'}">
+                        <rect x="-22" y="-10" width="44" height="18" rx="6" fill="#ffffff" stroke="${f.color}" stroke-width="1.5" />
+                        <text x="0" y="3" text-anchor="middle" fill="${f.color}" font-family="Prompt" font-weight="bold" font-size="11">
+                            ${f.mag} N
+                        </text>
+                    </g>
+                `;
+            });
+
+            // วาดเส้นประสี่เหลี่ยมด้านขนาน (กรณีแรงตั้งฉาก) และลูกศรแรงลัพธ์เฉลยเมื่อตอบถูก
+            if (showResultant) {
+                let sumFx = 0;
+                let sumFy = 0;
+                lvl.forces.forEach(f => {
+                    const m = DIR_META[f.dir];
+                    sumFx += f.mag * m.dx;
+                    sumFy += f.mag * m.dy;
+                });
+
+                const resMag = Math.round(Math.hypot(sumFx, sumFy) * 10) / 10;
+
+                if (resMag > 0.01) {
+                    const ux = sumFx / resMag;
+                    const uy = sumFy / resMag;
+                    const rLen = Math.max(30, resMag * scale);
+
+                    // หากเป็นแรงตั้งฉาก (มีทั้งองค์ประกอบแกน X และแกน Y) ให้วาดเส้นประประกอบเป็นสี่เหลี่ยมมุมฉากให้เห็นภาพการรวมเวกเตอร์
+                    if (Math.abs(sumFx) > 0.01 && Math.abs(sumFy) > 0.01) {
+                        const endX = cx + ux * (rLen + 18);
+                        const endY = cy + uy * (rLen + 18);
+                        const xTip = cx + (sumFx >= 0 ? 1 : -1) * (Math.abs(sumFx) * scale + 18);
+                        const yTip = cy + (sumFy >= 0 ? 1 : -1) * (Math.abs(sumFy) * scale + 18);
+
+                        svgContent += `
+                            <line x1="${xTip}" y1="${cy}" x2="${endX}" y2="${endY}" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="4 3" />
+                            <line x1="${cx}" y1="${yTip}" x2="${endX}" y2="${endY}" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="4 3" />
+                        `;
+                    }
+
+                    const rx1 = cx + ux * 18;
+                    const ry1 = cy + uy * 18;
+                    const rx2 = rx1 + ux * rLen;
+                    const ry2 = ry1 + uy * rLen;
+
+                    const rLabelX = rx2 + ux * 20;
+                    const rLabelY = ry2 + uy * 18;
+
+                    svgContent += `
+                        <line x1="${rx1}" y1="${ry1}" x2="${rx2}" y2="${ry2}"
+                              stroke="#d97706" stroke-width="5.5" stroke-linecap="round" stroke-dasharray="7 4"
+                              marker-end="url(#${markerPrefix}-arrow-resultant)" />
+                        <g transform="translate(${rLabelX}, ${rLabelY})">
+                            <rect x="-34" y="-11" width="68" height="21" rx="7" fill="#fef3c7" stroke="#d97706" stroke-width="2" />
+                            <text x="0" y="3" text-anchor="middle" fill="#92400e" font-family="Prompt" font-weight="bold" font-size="11">
+                                ลัพธ์ ${lvl.ansMag} N
+                            </text>
+                        </g>
+                    `;
+                } else {
+                    // กรณีแรงลัพธ์ = 0 N วาดวงแหวนสมดุลรอบวัตถุ
+                    svgContent += `
+                        <circle cx="${cx}" cy="${cy}" r="28" fill="none" stroke="#10b981" stroke-width="3" stroke-dasharray="5 3" />
+                        <g transform="translate(${cx}, ${cy - 38})">
+                            <rect x="-42" y="-10" width="84" height="20" rx="7" fill="#d1fae5" stroke="#059669" stroke-width="1.5" />
+                            <text x="0" y="3" text-anchor="middle" fill="#065f46" font-family="Prompt" font-weight="bold" font-size="11">
+                                แรงลัพธ์ = 0 N
+                            </text>
+                        </g>
+                    `;
+                }
+            }
+
+            // กล่องวัตถุตรงจุดศูนย์กลาง
+            svgContent += `
+                <rect x="${cx - 18}" y="${cy - 18}" width="36" height="36" rx="8" fill="#f59e0b" stroke="#78350f" stroke-width="2" />
+                <text x="${cx}" y="${cy + 4}" text-anchor="middle" fill="#ffffff" font-family="Prompt" font-weight="bold" font-size="11">วัตถุ</text>
+            `;
+
+            svg.innerHTML = svgContent;
+        }
+
+        // วาดแผนภาพเฉลยวิธีรวมเวกเตอร์แบบ "หางต่อหัว" (Head-to-Tail Method)
+        function renderHeadToTailDiagram(lvl, targetSvgId = 'forceModalSvg') {
+            const svg = document.getElementById(targetSvgId);
+            if (!svg) return;
+
+            // 1. คำนวณพิกัดเส้นทางเดินแบบหางต่อหัวในหน่วยนิวตัน (เริ่มที่ (0, 0))
+            let curX = 0;
+            let curY = 0;
+            const segments = [];
+            const allPoints = [{ x: 0, y: 0 }];
+
+            lvl.forces.forEach((f, idx) => {
+                const m = DIR_META[f.dir];
+                const nextX = curX + f.mag * m.dx;
+                const nextY = curY + f.mag * m.dy;
+                segments.push({
+                    idx,
+                    force: f,
+                    x1: curX,
+                    y1: curY,
+                    x2: nextX,
+                    y2: nextY
+                });
+                allPoints.push({ x: nextX, y: nextY });
+                curX = nextX;
+                curY = nextY;
+            });
+
+            // 2. หาขอบเขตพิกัดทั้งหมดเพื่อปรับมาตราส่วนและจัดกึ่งกลางภาพอัตโนมัติไม่ให้ล้นกรอบ
+            let minX = Math.min(...allPoints.map(p => p.x));
+            let maxX = Math.max(...allPoints.map(p => p.x));
+            let minY = Math.min(...allPoints.map(p => p.y));
+            let maxY = Math.max(...allPoints.map(p => p.y));
+
+            const spanX = Math.max(4, maxX - minX);
+            const spanY = Math.max(4, maxY - minY);
+            const maxSpan = Math.max(spanX, spanY);
+            const scale = 190 / maxSpan;
+
+            const midX = (minX + maxX) / 2;
+            const midY = (minY + maxY) / 2;
+            const toSvgX = (wx) => 160 + (wx - midX) * scale;
+            const toSvgY = (wy) => 160 + (wy - midY) * scale;
+
+            const startSx = toSvgX(0);
+            const startSy = toSvgY(0);
+            const endSx = toSvgX(curX);
+            const endSy = toSvgY(curY);
+
+            let svgContent = `
+                <defs>
+                    ${lvl.forces.map((f, i) => `
+                        <marker id="ht-arrow-${i}" markerWidth="8" markerHeight="8" refX="6.5" refY="4" orient="auto">
+                            <path d="M0,1 L7,4 L0,7 Z" fill="${f.color}" />
+                        </marker>
+                    `).join('')}
+                    <marker id="ht-arrow-resultant" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto">
+                        <path d="M0,1 L8,4.5 L0,8 Z" fill="#d97706" />
+                    </marker>
+                </defs>
+
+                <!-- ตารางพื้นหลังและแกนอ้างอิง -->
+                <rect x="14" y="14" width="292" height="292" rx="16" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.5" />
+                <line x1="160" y1="26" x2="160" y2="294" stroke="#f1f5f9" stroke-width="1.5" />
+                <line x1="26" y1="160" x2="294" y2="160" stroke="#f1f5f9" stroke-width="1.5" />
+
+                <!-- เข็มทิศย่อมุมขวาบน -->
+                <g transform="translate(284, 38)">
+                    <circle cx="0" cy="0" r="16" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1" />
+                    <text x="0" y="-6" text-anchor="middle" fill="#1e293b" font-family="Prompt" font-weight="bold" font-size="8">N</text>
+                    <text x="0" y="12" text-anchor="middle" fill="#64748b" font-family="Prompt" font-weight="bold" font-size="8">S</text>
+                    <text x="9" y="3" text-anchor="middle" fill="#64748b" font-family="Prompt" font-weight="bold" font-size="8">E</text>
+                    <text x="-9" y="3" text-anchor="middle" fill="#64748b" font-family="Prompt" font-weight="bold" font-size="8">W</text>
+                </g>
+            `;
+
+            // 3. วาดลูกศรแต่ละเส้นแบบหางต่อหัว (ขยับเยื้องเล็กน้อยหากเดินย้อนทับเส้นเดิม)
+            segments.forEach((seg, i) => {
+                const sx1 = toSvgX(seg.x1);
+                const sy1 = toSvgY(seg.y1);
+                const sx2 = toSvgX(seg.x2);
+                const sy2 = toSvgY(seg.y2);
+
+                const dx = sx2 - sx1;
+                const dy = sy2 - sy1;
+                const len = Math.hypot(dx, dy) || 1;
+                const nx = -dy / len;
+                const ny = dx / len;
+
+                // หากไม่ใช่เส้นแรกและเดินสวนทางทับแนวเดิม ให้ขยับขนานเล็กน้อยเพื่อเห็นการต่อหางชัดๆ
+                const isReverseOverlap = i > 0 && (
+                    (Math.abs(dy) < 0.1 && Math.abs(sy1 - toSvgY(segments[i - 1].y1)) < 0.1) ||
+                    (Math.abs(dx) < 0.1 && Math.abs(sx1 - toSvgX(segments[i - 1].x1)) < 0.1)
+                );
+                const shift = isReverseOverlap ? 9 : 0;
+
+                const ax1 = sx1 + nx * shift;
+                const ay1 = sy1 + ny * shift;
+                const ax2 = sx2 + nx * shift;
+                const ay2 = sy2 + ny * shift;
+
+                // เส้นประเชื่อมจุดต่อระหว่างหัวลูกศรเดิมกับหางลูกศรถัดไป (เมื่อมีการขยับหลบ)
+                if (isReverseOverlap) {
+                    svgContent += `
+                        <line x1="${sx1}" y1="${sy1}" x2="${ax1}" y2="${ay1}"
+                              stroke="#94a3b8" stroke-width="1.2" stroke-dasharray="2 2" />
+                    `;
+                }
+
+                // จุดข้อต่อวงกลมเล็กๆ ที่หางของเวกเตอร์
+                svgContent += `
+                    <circle cx="${ax1}" cy="${ay1}" r="3.5" fill="#ffffff" stroke="${seg.force.color}" stroke-width="2" />
+                    <line x1="${ax1}" y1="${ay1}" x2="${ax2}" y2="${ay2}"
+                          stroke="${seg.force.color}" stroke-width="4" stroke-linecap="round"
+                          marker-end="url(#ht-arrow-${i})" />
+                `;
+
+                // ป้ายกำกับลำดับที่และขนาดแรง (เช่น ① 4N)
+                const midSegX = (ax1 + ax2) / 2 + nx * (shift >= 0 ? 15 : -15);
+                const midSegY = (ay1 + ay2) / 2 + ny * (shift >= 0 ? 15 : -15);
+                svgContent += `
+                    <g transform="translate(${midSegX}, ${midSegY})">
+                        <rect x="-24" y="-9" width="48" height="17" rx="5" fill="#ffffff" stroke="${seg.force.color}" stroke-width="1.2" />
+                        <text x="0" y="3" text-anchor="middle" fill="${seg.force.color}" font-family="Prompt" font-weight="bold" font-size="10">
+                            ${i + 1}) ${seg.force.mag}N
+                        </text>
+                    </g>
+                `;
+            });
+
+            // 4. วาดลูกศรแรงลัพธ์จาก "จุดเริ่มต้น (หางตัวแรก)" ไปยัง "จุดสิ้นสุด (หัวตัวสุดท้าย)"
+            const resDistPx = Math.hypot(endSx - startSx, endSy - startSy);
+            if (lvl.ansMag > 0 && resDistPx > 4) {
+                const rdx = endSx - startSx;
+                const rdy = endSy - startSy;
+                const rnx = -rdy / resDistPx;
+                const rny = rdx / resDistPx;
+
+                // ขยับเส้นแรงลัพธ์ลงอีกฝั่งเล็กน้อยในกรณี 1 มิติ เพื่อไม่ให้ทับเส้นโจทย์
+                const is1D = (Math.abs(curX) < 0.01 || Math.abs(curY) < 0.01) && lvl.forces.length > 1;
+                const rShift = is1D ? -13 : 0;
+
+                const rx1 = startSx + rnx * rShift;
+                const ry1 = startSy + rny * rShift;
+                const rx2 = endSx + rnx * rShift;
+                const ry2 = endSy + rny * rShift;
+
+                const labelRx = (rx1 + rx2) / 2 + rnx * (rShift <= 0 ? -17 : 17);
+                const labelRy = (ry1 + ry2) / 2 + rny * (rShift <= 0 ? -17 : 17);
+
+                svgContent += `
+                    <line x1="${rx1}" y1="${ry1}" x2="${rx2}" y2="${ry2}"
+                          stroke="#d97706" stroke-width="5" stroke-linecap="round" stroke-dasharray="6 4"
+                          marker-end="url(#ht-arrow-resultant)" />
+                    <g transform="translate(${labelRx}, ${labelRy})">
+                        <rect x="-35" y="-10" width="70" height="19" rx="6" fill="#fef3c7" stroke="#d97706" stroke-width="1.8" />
+                        <text x="0" y="3" text-anchor="middle" fill="#92400e" font-family="Prompt" font-weight="bold" font-size="10.5">
+                            ลัพธ์ ${lvl.ansMag}N
+                        </text>
+                    </g>
+                `;
+            } else {
+                // กรณีวนกลับมาที่จุดเริ่มต้นพอดี (แรงลัพธ์ = 0 N)
+                svgContent += `
+                    <circle cx="${startSx}" cy="${startSy}" r="18" fill="none" stroke="#10b981" stroke-width="2.5" stroke-dasharray="4 3" />
+                    <g transform="translate(${startSx}, ${startSy - 26})">
+                        <rect x="-48" y="-10" width="96" height="19" rx="6" fill="#d1fae5" stroke="#059669" stroke-width="1.5" />
+                        <text x="0" y="3" text-anchor="middle" fill="#065f46" font-family="Prompt" font-weight="bold" font-size="10">
+                            กลับมาที่เดิม = 0N
+                        </text>
+                    </g>
+                `;
+            }
+
+            // 5. จุดเริ่มต้น (หางตัวแรก) และจุดสิ้นสุด (หัวตัวสุดท้าย)
+            svgContent += `
+                <circle cx="${startSx}" cy="${startSy}" r="6" fill="#1e293b" stroke="#ffffff" stroke-width="2" />
+                <text x="${startSx}" y="${startSy + 16}" text-anchor="middle" fill="#1e293b" font-family="Prompt" font-weight="bold" font-size="10">จุดเริ่ม</text>
+            `;
+
+            svg.innerHTML = svgContent;
+        }
+
+        function toggleForceHint() {
+            document.getElementById('forceHintBox').classList.toggle('hidden');
+        }
+
+        function resetForceLevel() {
+            loadForceLevel(forceLevelIdx);
+        }
+
+        function changeForceLevel(delta) {
+            const nextIdx = forceLevelIdx + delta;
+            if (nextIdx >= 0 && nextIdx < FORCE_LEVELS.length) {
+                loadForceLevel(nextIdx);
+            }
+        }
+
+        function adjustForceAnswer(delta) {
+            userForceMag = Math.max(0, Math.min(50, userForceMag + delta));
+            if (userForceMag === 0) {
+                userForceDir = 'NONE';
+            } else if (userForceDir === 'NONE') {
+                userForceDir = null;
+            }
+            updateForceAnswerUI();
+        }
+
+        function selectForceDirection(dir) {
+            userForceDir = dir;
+            if (dir === 'NONE') {
+                userForceMag = 0;
+            }
+            updateForceAnswerUI();
+        }
+
+        function updateForceAnswerUI() {
+            document.getElementById('forceMagValue').textContent = userForceMag;
+            document.querySelectorAll('.dir-choice-btn').forEach(btn => {
+                const isSelected = btn.dataset.dir === userForceDir;
+                if (isSelected) {
+                    btn.className = 'dir-choice-btn btn-tactile py-2 px-1 rounded-xl bg-orange-600 border-2 border-orange-700 font-prompt font-bold text-[11px] text-white shadow-sm scale-[1.03]';
+                } else {
+                    btn.className = 'dir-choice-btn btn-tactile py-2 px-1 rounded-xl bg-white border border-slate-300 font-prompt font-bold text-[11px] text-slate-700 hover:bg-orange-50';
+                }
+            });
+        }
+
+        function renderForceListCards(lvl) {
+            const list = document.getElementById('forceListContainer');
+            list.innerHTML = '';
+
+            lvl.forces.forEach(f => {
+                const meta = DIR_META[f.dir];
+                const item = document.createElement('div');
+                item.className = 'flex items-center justify-between bg-slate-50 border border-slate-200 rounded-xl px-3 py-2';
+                item.innerHTML = `
+                    <div class="flex items-center gap-2">
+                        <span class="w-3.5 h-3.5 rounded-full flex-shrink-0" style="background-color: ${f.color};"></span>
+                        <span class="font-prompt font-semibold text-xs sm:text-sm text-slate-800">${f.name}</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="font-prompt font-bold text-sm" style="color: ${f.color};">${f.mag} N</span>
+                        <span class="text-xs font-semibold bg-white border border-slate-200 px-2 py-0.5 rounded-lg text-slate-700">
+                            ${meta.arrow} ${meta.label}
+                        </span>
+                    </div>
+                `;
+                list.appendChild(item);
+            });
+        }
+
+        function checkForceAnswer() {
+            const lvl = FORCE_LEVELS[forceLevelIdx];
+            const banner = document.getElementById('forceFeedbackBanner');
+            const msg = document.getElementById('forceFeedbackMsg');
+
+            if (userForceDir === null) {
+                banner.classList.remove('hidden');
+                msg.textContent = 'กรุณากดเลือก "ทิศทางของแรงลัพธ์" บนแผงเข็มทิศ 8 ทิศก่อนตรวจคำตอบนะ';
+                return;
+            }
+
+            const validDirs = lvl.acceptDirs || [lvl.ansDir];
+            const isMagCorrect = (userForceMag === lvl.ansMag);
+            const isDirCorrect = validDirs.includes(userForceDir);
+
+            if (isMagCorrect && isDirCorrect) {
+                banner.classList.add('hidden');
+                forceLevelSolved = true;
+                forceCompletedLevels.add(lvl.id);
+                saveProgress();
+                renderForceLevelSelector();
+
+                // วาดลูกศรแรงลัพธ์เฉลยบนกระดานหลัก และวาดวิธีต่อเวกเตอร์แบบ "หางต่อหัว" ในหน้าต่างเฉลย
+                renderForceDiagram(lvl, true, 'forceVectorSvg');
+                renderHeadToTailDiagram(lvl, 'forceModalSvg');
+
+                const dirText = DIR_META[userForceDir].label;
+                document.getElementById('forceModalSummary').textContent =
+                    lvl.ansMag === 0 ? 'แรงลัพธ์ = 0 N (แรงสมดุล วัตถุหยุดนิ่ง)' : `แรงลัพธ์ = ${lvl.ansMag} N ไปทาง${dirText}`;
+
+                const nextBtn = document.getElementById('forceModalNextBtn');
+                nextBtn.textContent = forceLevelIdx === FORCE_LEVELS.length - 1
+                    ? `ยอดเยี่ยม! เล่นครบทั้ง ${FORCE_LEVELS.length} ด่านแล้ว 🎓`
+                    : `ไปด่านที่ ${forceLevelIdx + 2} →`;
+
+                document.getElementById('forceSuccessModal').classList.remove('hidden');
+            } else {
+                banner.classList.remove('hidden');
+                if (!isMagCorrect && !isDirCorrect) {
+                    msg.textContent = `ยังไม่ถูกทั้งขนาดและทิศทาง ลองดูว่าแรงไปทิศเดียวกัน (+) ตรงข้ามกัน (−) หรือตั้งฉากกัน แล้วลองใหม่อีกครั้งนะ`;
+                } else if (!isMagCorrect) {
+                    msg.textContent = `ทิศทางถูกต้องแล้ว! แต่ขนาดแรงลัพธ์ยังไม่ถูก ลองคำนวณตัวเลขใหม่อีกครั้งนะ`;
+                } else {
+                    msg.textContent = `ขนาดแรงลัพธ์ (${userForceMag} N) ถูกต้องแล้ว! แต่ทิศทางยังคลาดเคลื่อน ลองสังเกตทิศเฉียงของลูกศรทั้งสองนะ`;
+                }
+            }
+        }
+
+        function closeForceSuccessModal() {
+            document.getElementById('forceSuccessModal').classList.add('hidden');
+        }
+
+        function goNextFromForceModal() {
+            closeForceSuccessModal();
+            if (forceLevelIdx < FORCE_LEVELS.length - 1) {
+                loadForceLevel(forceLevelIdx + 1);
+            } else {
+                loadForceLevel(0);
+            }
+        }
+
+        // =====================================================================
+        // 6. ระบบควบคุมการเล่นเกมดุลสมการเคมี ม.3
+        // =====================================================================
+        function initApp() {
+            loadSavedProgress();
+            renderHubCatalog();
+            renderLevelSelector();
+        }
+
+        function setDifficultyFilter(filter) {
+            currentFilter = filter;
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                if (btn.dataset.filter === filter) {
+                    btn.className = 'filter-btn font-prompt text-xs font-bold px-2.5 py-1 rounded-lg bg-white text-teal-900 shadow-xs';
+                } else {
+                    btn.className = 'filter-btn font-prompt text-xs font-semibold px-2.5 py-1 rounded-lg bg-teal-900/40 text-teal-100 hover:bg-teal-700';
+                }
+            });
+            renderLevelSelector();
+
+            if (filter !== 'all' && LEVELS[currentLevelIdx].difficulty !== filter) {
+                const firstMatchIdx = LEVELS.findIndex(lvl => lvl.difficulty === filter);
+                if (firstMatchIdx !== -1) loadLevel(firstMatchIdx);
+            }
+        }
+
+        function pickRandomLevel() {
+            const pool = LEVELS.map((lvl, idx) => ({ lvl, idx }))
+                .filter(item => currentFilter === 'all' || item.lvl.difficulty === currentFilter);
+            if (pool.length === 0) return;
+
+            const candidates = pool.length > 1
+                ? pool.filter(item => item.idx !== currentLevelIdx)
+                : pool;
+            const chosen = candidates[Math.floor(Math.random() * candidates.length)];
+            loadLevel(chosen.idx);
+        }
+
+        function loadLevel(index) {
+            currentLevelIdx = index;
+            modalShownForCurrentSolve = false;
+            const level = LEVELS[index];
+
+            currentCoeffs = {
+                r: level.reactants.map(() => 1),
+                p: level.products.map(() => 1)
+            };
+
+            document.getElementById('levelBadge').textContent = `ด่านที่ ${level.id}/${LEVELS.length}`;
+            const diffBadge = document.getElementById('difficultyBadge');
+            diffBadge.textContent = level.difficulty;
+            if (level.difficulty === 'ระดับง่าย') {
+                diffBadge.className = 'bg-emerald-100 text-emerald-700 font-semibold text-xs px-2.5 py-0.5 rounded-full';
+            } else if (level.difficulty === 'ระดับปานกลาง') {
+                diffBadge.className = 'bg-amber-100 text-amber-800 font-semibold text-xs px-2.5 py-0.5 rounded-full';
+            } else {
+                diffBadge.className = 'bg-purple-100 text-purple-800 font-semibold text-xs px-2.5 py-0.5 rounded-full';
+            }
+
+            document.getElementById('reactionTitle').textContent = level.title;
+            document.getElementById('hintText').textContent = level.hint;
+            document.getElementById('hintBox').classList.add('hidden');
+            document.getElementById('statusBanner').classList.add('hidden');
+
+            document.getElementById('prevBtn').disabled = (index === 0);
+            document.getElementById('nextBtn').disabled = (index === LEVELS.length - 1);
+
+            renderLevelSelector();
+            renderEquationCards();
+            updateBalanceAndCheck();
+        }
+
+        function resetCurrentLevel() {
+            loadLevel(currentLevelIdx);
+        }
+
+        function changeLevel(delta) {
+            const nextIdx = currentLevelIdx + delta;
+            if (nextIdx >= 0 && nextIdx < LEVELS.length) {
+                loadLevel(nextIdx);
+            }
+        }
+
+        function toggleHint() {
+            document.getElementById('hintBox').classList.toggle('hidden');
+        }
+
+        function renderLevelSelector() {
+            const container = document.getElementById('levelSelector');
+            container.innerHTML = '';
+
+            LEVELS.forEach((lvl, idx) => {
+                if (currentFilter !== 'all' && lvl.difficulty !== currentFilter) return;
+
+                const isCurrent = idx === currentLevelIdx;
+                const isDone = completedLevels.has(lvl.id);
+
+                const btn = document.createElement('button');
+                btn.onclick = () => loadLevel(idx);
+                
+                let styleClass = 'flex-shrink-0 w-9 h-9 rounded-xl font-prompt font-bold text-sm flex items-center justify-center transition-all ';
+                if (isCurrent) {
+                    styleClass += 'bg-yellow-300 text-teal-950 ring-2 ring-white shadow-md scale-105';
+                } else if (isDone) {
+                    styleClass += 'bg-emerald-500 text-white border border-emerald-300';
+                } else {
+                    styleClass += 'bg-teal-800/60 text-teal-100 hover:bg-teal-600 border border-teal-500/40';
+                }
+
+                btn.className = styleClass;
+                btn.innerHTML = isDone && !isCurrent ? `✓` : `${lvl.id}`;
+                container.appendChild(btn);
+            });
+
+            document.getElementById('scoreDisplay').textContent = `${completedLevels.size} / ${LEVELS.length}`;
+        }
+
+        function renderEquationCards() {
+            const level = LEVELS[currentLevelIdx];
+            renderSideCards('reactantsContainer', level.reactants, 'r');
+            renderSideCards('productsContainer', level.products, 'p');
+        }
+
+        function renderSideCards(containerId, speciesList, side) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+
+            speciesList.forEach((species, idx) => {
+                if (idx > 0) {
+                    const plus = document.createElement('div');
+                    plus.className = 'flex items-center justify-center font-prompt font-bold text-xl text-slate-400 px-0.5';
+                    plus.textContent = '+';
+                    container.appendChild(plus);
+                }
+
+                const coeff = currentCoeffs[side][idx];
+                const card = document.createElement('div');
+                card.className = 'flex-1 min-w-[135px] max-w-[210px] bg-white rounded-2xl p-2.5 border border-slate-200 shadow-xs flex flex-col justify-between';
+
+                const coeffStyle = coeff === 1 
+                    ? 'text-slate-400 bg-slate-100 border-slate-300' 
+                    : 'text-teal-700 bg-teal-50 border-teal-400 ring-2 ring-teal-200';
+
+                card.innerHTML = `
+                    <div>
+                        <div class="flex items-center justify-center gap-1.5 mb-1">
+                            <button onclick="adjustCoeff('${side}', ${idx}, -1)" 
+                                    ${coeff <= 1 ? 'disabled' : ''}
+                                    aria-label="ลดจำนวน"
+                                    class="btn-tactile w-10 h-10 rounded-xl bg-rose-100 hover:bg-rose-200 disabled:opacity-30 text-rose-700 font-prompt font-bold text-xl flex items-center justify-center border border-rose-300 shadow-xs">
+                                −
+                            </button>
+
+                            <div class="w-10 h-10 rounded-xl border-2 ${coeffStyle} font-prompt font-bold text-xl flex items-center justify-center transition-all">
+                                ${coeff}
+                            </div>
+
+                            <button onclick="adjustCoeff('${side}', ${idx}, 1)" 
+                                    ${coeff >= 8 ? 'disabled' : ''}
+                                    aria-label="เพิ่มจำนวน"
+                                    class="btn-tactile w-10 h-10 rounded-xl bg-teal-500 hover:bg-teal-600 disabled:opacity-30 text-white font-prompt font-bold text-xl flex items-center justify-center border border-teal-600 shadow-xs">
+                                +
+                            </button>
+                        </div>
+
+                        <div class="text-center mt-1.5">
+                            <div class="chem-formula text-xl sm:text-2xl font-bold text-slate-800">
+                                <span class="${coeff === 1 ? 'text-slate-300 text-base mr-0.5' : 'text-teal-600 mr-0.5'}">${coeff === 1 ? '' : coeff}</span>${species.formulaHtml}
+                            </div>
+                            <div class="text-[11px] text-slate-500 font-medium leading-tight mt-0.5">${species.name}</div>
+                        </div>
+                    </div>
+
+                    <div class="mt-2.5 pt-2 border-t border-dashed border-slate-200">
+                        <div class="text-[10px] text-center text-slate-400 mb-1">จำนวน ${coeff} ชุดโมเลกุล</div>
+                        <div class="flex flex-wrap items-center justify-center gap-1.5 min-h-[44px]">
+                            ${generateMoleculeClustersHTML(species.atoms, coeff)}
+                        </div>
+                    </div>
+                `;
+
+                container.appendChild(card);
+            });
+        }
+
+        function generateMoleculeClustersHTML(atomsMap, count) {
+            let html = '';
+            let singleMoleculeBalls = '';
+            for (const [el, qty] of Object.entries(atomsMap)) {
+                const style = ELEMENT_STYLES[el] || { bg: '#64748b', border: '#334155', text: '#fff' };
+                for (let q = 0; q < qty; q++) {
+                    singleMoleculeBalls += `
+                        <span class="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-prompt font-bold shadow-xs"
+                              style="background-color: ${style.bg}; border: 1.5px solid ${style.border}; color: ${style.text};">
+                            ${el}
+                        </span>
+                    `;
+                }
+            }
+
+            for (let c = 0; c < count; c++) {
+                html += `
+                    <div class="molecule-cluster inline-flex flex-wrap items-center justify-center gap-0.5 bg-slate-100/90 border border-slate-300 rounded-xl p-1 shadow-2xs">
+                        ${singleMoleculeBalls}
+                    </div>
+                `;
+            }
+            return html;
+        }
+
+        function adjustCoeff(side, idx, delta) {
+            const currentVal = currentCoeffs[side][idx];
+            const newVal = currentVal + delta;
+            if (newVal >= 1 && newVal <= 8) {
+                currentCoeffs[side][idx] = newVal;
+                modalShownForCurrentSolve = false;
+                renderEquationCards();
+                updateBalanceAndCheck();
+            }
+        }
+
+        function updateBalanceAndCheck() {
+            const level = LEVELS[currentLevelIdx];
+            const leftTotals = {};
+            const rightTotals = {};
+            const allElements = new Set();
+
+            level.reactants.forEach((sp, idx) => {
+                const coeff = currentCoeffs.r[idx];
+                for (const [el, qty] of Object.entries(sp.atoms)) {
+                    allElements.add(el);
+                    leftTotals[el] = (leftTotals[el] || 0) + (qty * coeff);
+                }
+            });
+
+            level.products.forEach((sp, idx) => {
+                const coeff = currentCoeffs.p[idx];
+                for (const [el, qty] of Object.entries(sp.atoms)) {
+                    allElements.add(el);
+                    rightTotals[el] = (rightTotals[el] || 0) + (qty * coeff);
+                }
+            });
+
+            const trackerList = document.getElementById('atomTrackerList');
+            trackerList.innerHTML = '';
+
+            let allBalanced = true;
+            const elementsArray = Array.from(allElements);
+
+            elementsArray.forEach(el => {
+                const leftCount = leftTotals[el] || 0;
+                const rightCount = rightTotals[el] || 0;
+                const isEqual = (leftCount === rightCount && leftCount > 0);
+                if (!isEqual) allBalanced = false;
+
+                const style = ELEMENT_STYLES[el] || { name: el, bg: '#64748b', border: '#334155', text: '#fff' };
+
+                const rowBg = isEqual ? 'bg-emerald-50 border-emerald-300' : 'bg-rose-50/70 border-rose-200';
+                const badgeClass = isEqual ? 'bg-emerald-600 text-white' : 'bg-rose-500 text-white';
+                const symbolText = isEqual ? '✓' : '≠';
+
+                const row = document.createElement('div');
+                row.className = `rounded-xl p-2.5 border ${rowBg} flex items-center justify-between gap-2 transition-colors`;
+                row.innerHTML = `
+                    <div class="flex items-center gap-2 min-w-[95px]">
+                        <span class="w-7 h-7 rounded-full flex items-center justify-center font-prompt font-bold text-xs shadow-xs flex-shrink-0"
+                              style="background-color: ${style.bg}; border: 2px solid ${style.border}; color: ${style.text};">
+                            ${el}
+                        </span>
+                        <div>
+                            <div class="font-prompt font-bold text-xs sm:text-sm text-slate-800 leading-none">${el}</div>
+                            <div class="text-[11px] text-slate-500 mt-0.5">${style.name}</div>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-2 sm:gap-3">
+                        <div class="text-center">
+                            <div class="text-[10px] text-sky-700 font-semibold">ซ้าย</div>
+                            <div class="font-prompt font-bold text-base sm:text-lg ${isEqual ? 'text-emerald-700' : 'text-slate-800'}">${leftCount}</div>
+                        </div>
+
+                        <div class="w-7 h-7 rounded-full ${badgeClass} font-prompt font-bold text-sm flex items-center justify-center shadow-xs">
+                            ${symbolText}
+                        </div>
+
+                        <div class="text-center">
+                            <div class="text-[10px] text-indigo-700 font-semibold">ขวา</div>
+                            <div class="font-prompt font-bold text-base sm:text-lg ${isEqual ? 'text-emerald-700' : 'text-slate-800'}">${rightCount}</div>
+                        </div>
+                    </div>
+                `;
+                trackerList.appendChild(row);
+            });
+
+            const legendContainer = document.getElementById('atomLegend');
+            legendContainer.innerHTML = '<span class="font-semibold text-slate-500">สีอะตอม:</span>';
+            elementsArray.forEach(el => {
+                const st = ELEMENT_STYLES[el];
+                if (st) {
+                    legendContainer.innerHTML += `
+                        <span class="inline-flex items-center gap-1 bg-slate-100 px-2 py-0.5 rounded-full">
+                            <span class="w-3 h-3 rounded-full inline-block" style="background-color: ${st.bg}; border: 1px solid ${st.border};"></span>
+                            <span>${el} (${st.name})</span>
+                        </span>
+                    `;
+                }
+            });
+
+            const overallTag = document.getElementById('overallBalanceTag');
+            const statusBanner = document.getElementById('statusBanner');
+            const statusIcon = document.getElementById('statusIcon');
+            const statusMessage = document.getElementById('statusMessage');
+
+            if (allBalanced) {
+                const allCoeffs = [...currentCoeffs.r, ...currentCoeffs.p];
+                const commonDivisor = allCoeffs.reduce((acc, val) => gcd(acc, val));
+
+                if (commonDivisor > 1) {
+                    overallTag.textContent = 'สมดุลแล้ว (ลดทอนได้อีก)';
+                    overallTag.className = 'text-xs font-bold px-2.5 py-1 rounded-full bg-amber-100 text-amber-800';
+
+                    statusBanner.className = 'rounded-2xl p-3 text-sm font-semibold flex items-center gap-2.5 shadow-sm border bg-amber-50 border-amber-300 text-amber-900';
+                    statusIcon.textContent = '⚠️';
+                    statusMessage.textContent = `สมดุลแล้ว! แต่ตัวเลขทั้งหมดหารด้วย ${commonDivisor} ลงตัว ลองลดให้เป็นอัตราส่วนอย่างต่ำดูนะ`;
+                    statusBanner.classList.remove('hidden');
+                } else {
+                    overallTag.textContent = 'สมดุลสมบูรณ์ ✓';
+                    overallTag.className = 'text-xs font-bold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800';
+                    statusBanner.classList.add('hidden');
+
+                    completedLevels.add(level.id);
+                    saveProgress();
+                    renderLevelSelector();
+
+                    if (!modalShownForCurrentSolve) {
+                        modalShownForCurrentSolve = true;
+                        setTimeout(() => showSuccessModal(), 350);
+                    }
+                }
+            } else {
+                overallTag.textContent = 'ยังไม่สมดุล';
+                overallTag.className = 'text-xs font-bold px-2.5 py-1 rounded-full bg-rose-100 text-rose-700';
+                statusBanner.classList.add('hidden');
+            }
+        }
+
+        function gcd(a, b) {
+            return b === 0 ? a : gcd(b, a % b);
+        }
+
+        function showSuccessModal() {
+            const level = LEVELS[currentLevelIdx];
+            const leftStr = level.reactants.map((sp, i) => {
+                const c = currentCoeffs.r[i];
+                return `${c > 1 ? `<span class="text-teal-600">${c}</span>` : ''}${sp.formulaHtml}`;
+            }).join(' + ');
+
+            const rightStr = level.products.map((sp, i) => {
+                const c = currentCoeffs.p[i];
+                return `${c > 1 ? `<span class="text-teal-600">${c}</span>` : ''}${sp.formulaHtml}`;
+            }).join(' + ');
+
+            document.getElementById('modalBalancedEquation').innerHTML = `${leftStr} → ${rightStr}`;
+
+            const modalNextBtn = document.getElementById('modalNextBtn');
+            if (currentLevelIdx === LEVELS.length - 1) {
+                modalNextBtn.textContent = 'ยอดเยี่ยม! เล่นครบทุกด่านแล้ว 🎓';
+            } else {
+                modalNextBtn.textContent = `ไปด่านที่ ${currentLevelIdx + 2} →`;
+            }
+
+            document.getElementById('successModal').classList.remove('hidden');
+        }
+
+        function closeSuccessModal() {
+            document.getElementById('successModal').classList.add('hidden');
+        }
+
+        function goNextFromModal() {
+            closeSuccessModal();
+            if (currentLevelIdx < LEVELS.length - 1) {
+                loadLevel(currentLevelIdx + 1);
+            } else {
+                loadLevel(0);
+            }
+        }
+
+        window.onload = function() {
+            initApp();
+        };
+    </script>
+</body>
+</html>
